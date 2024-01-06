@@ -1,0 +1,4 @@
+Intalling sfml in linux: `sudo apt-get install libsfml-dev`
+Compile program using sfml lib: `g++ -c main.cpp` 
+Linking the program: `g++ a.o -lsfml-graphics -lsfml-window -lsfml-system`
+-lsfml-xxxx are all the SFML library the program will be using.
