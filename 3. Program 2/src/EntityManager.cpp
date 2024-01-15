@@ -32,3 +32,4 @@ const EntityVec& EntityManager::getEntities()
 const EntityVec& EntityManager::getEntities(const std::string & tag)
 {
 	
+}
