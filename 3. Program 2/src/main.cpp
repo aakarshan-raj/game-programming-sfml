@@ -4,16 +4,20 @@
 #include "tests.cpp"
 #include <math.h>
 
-void tests();
+void test_vec2();
 
 int main()
 {
-    tests();
-    // Game g("config");
-    // g.run();
+    test_vec2();
+    Game g("config");
+    g.run();
 }
 
-void tests()
+
+
+
+
+void test_vec2()
 {
     Vec2 v1(1, 2);
     Vec2 v2(1, 2);

@@ -28,10 +28,8 @@ void Game::run()
 
 void Game::init(const std::string &config)
 {
-	// Read in variables
-	// create window
-	// set frame
-	// spawn player
+	 m_window.create(sf::VideoMode(800,500),"hi");
+	 
 }
 
 void Game::setPaused(bool paused)
