@@ -31,7 +31,6 @@ private:
 	void sUserInput();								//Systems: User Input
 	void sLifeSpan();								//Systems: lifespan of the entities
 	void sRender();									//Systems: Render
-	void sSpawner();							//Systems: Spawns enemies
 	void sEnemySpawner();
 	void sCollision();								//Systems: Collision detection
 

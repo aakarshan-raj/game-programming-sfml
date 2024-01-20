@@ -7,6 +7,7 @@ Game::Game(const std::string &configFile)
 
 void Game::run()
 {
+	spawnPlayer();
 	while (m_running)
 	{
 		m_entities.update();
@@ -14,7 +15,6 @@ void Game::run()
 		if (!m_paused)
 		{
 			sLifeSpan();
-			sSpawner();
 			sMovement();
 			sCollision();
 		}
@@ -28,7 +28,7 @@ void Game::run()
 
 void Game::init(const std::string &config)
 {
-	 m_window.create(sf::VideoMode(800,500),"hi");
+	 m_window.create(sf::VideoMode(1200,800),"hi");
 	 
 }
 
@@ -44,6 +44,17 @@ void Game::sMovement()
 void Game::sUserInput()
 {
 	// handle all user input, close, pause, up,down,left,right, mouse click, only set state here. No movements here
+	sf::Event event;
+	while(m_window.pollEvent(event)){
+		if(event.type == sf::Event::Closed){
+				m_window.close();			
+		}
+		if(event.type == sf::Event::KeyPressed){
+			if(event.key.code == sf::Keyboard::Q){
+				m_window.close();
+			}
+		}
+	}
 }
 
 void Game::sLifeSpan()
@@ -56,10 +67,12 @@ void Game::sRender()
 	//  Logic to change position
 	// Draw
 	// Display
-}
+	m_window.clear();
+	for(const std::shared_ptr<Entity> &x:m_entities.getEntities()){
+	m_window.draw(x->cShape->circle);
+	}
+	m_window.display();
 
-void Game::sSpawner()
-{
 }
 
 void Game::sCollision()
@@ -69,7 +82,11 @@ void Game::sCollision()
 
 void Game::spawnPlayer()
 {
-	// add properties to player and spawn it.
+
+	m_player = m_entities.addEntity("Player");
+	m_player->cShape =  std::make_shared<CShape>(100,50,sf::Color(100,200,255),sf::Color(100,200,255),3);
+	m_player->cShape->circle.setPosition(400,250);
+	
 }
 void Game::sEnemySpawner()
 {
