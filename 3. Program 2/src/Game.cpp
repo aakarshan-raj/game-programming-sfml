@@ -1,5 +1,6 @@
 #include "Game.h"
 #include <iostream>
+#include <random>
 Game::Game(const std::string &configFile)
 {
 	init(configFile);
@@ -19,7 +20,7 @@ void Game::run()
 		}
 		sUserInput();
 		sRender();
-
+		spawnEnemy();
 		// Increment the current frame
 		++m_currentFrame;
 	}
@@ -30,6 +31,7 @@ void Game::init(const std::string &config)
 	m_window.create(sf::VideoMode(1200, 800), "hi");
 	m_window.setFramerateLimit(60);
 	spawnPlayer();
+	spawnEnemy();
 }
 
 void Game::setPaused(bool paused)
@@ -56,9 +58,10 @@ void Game::sMovement()
 	}
 	if (m_player->cInput->right == true)
 	{
-		if (m_player->cShape->circle.getPosition().x + m_player->cCollision->radius <1200)
+		if (m_player->cShape->circle.getPosition().x + m_player->cCollision->radius < 1200)
 			m_player->cShape->circle.move(10, 0);
 	}
+	m_player->cShape->circle.setRotation(m_player->cShape->circle.getRotation() + 10);
 }
 
 void Game::sUserInput()
@@ -135,7 +138,6 @@ void Game::sRender()
 	// Draw
 	// Display
 	m_window.clear();
-	m_player->cShape->circle.setRotation(100);
 	for (const std::shared_ptr<Entity> &x : m_entities.getEntities())
 	{
 		m_window.draw(x->cShape->circle);
@@ -164,8 +166,16 @@ void Game::sEnemySpawner()
 }
 void Game::spawnEnemy()
 {
-	// spawn enemy
-	// take account of the last frame of spanwed enemy, read doc for reason
+	std::random_device dev;
+	std::mt19937 mt(dev());
+	std::uniform_real_distribution<float> x(0, 1200);
+	std::uniform_real_distribution<float> y(0, 800);
+    
+	auto enemy = m_entities.addEntity("Enemy");
+	enemy->cTransform = std::make_shared<CTransform>(Vec2(x(mt), y(mt)), Vec2(0, 0), 0);
+	enemy->cCollision = std::make_shared<CCollision>(100);
+	enemy->cShape = std::make_shared<CShape>(m_player->cCollision->radius, 3, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 3);
+	enemy->cShape->circle.setPosition(enemy->cTransform->pos.x, enemy->cTransform->pos.y);
 }
 
 void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)

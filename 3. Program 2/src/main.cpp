@@ -8,7 +8,7 @@ void test_vec2();
 
 int main()
 {
-    test_vec2();
+    // test_vec2();
     Game g("config");
     g.run();
 }
