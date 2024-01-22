@@ -20,9 +20,13 @@ void Game::run()
 		}
 		sUserInput();
 		sRender();
-		spawnEnemy();
+		std::cout << m_currentFrame << std::endl;
 		// Increment the current frame
 		++m_currentFrame;
+		if (m_currentFrame % 60 == 0)
+		{
+			sEnemySpawner();
+		}
 	}
 }
 
@@ -61,7 +65,8 @@ void Game::sMovement()
 		if (m_player->cShape->circle.getPosition().x + m_player->cCollision->radius < 1200)
 			m_player->cShape->circle.move(10, 0);
 	}
-	m_player->cShape->circle.setRotation(m_player->cShape->circle.getRotation() + 10);
+	for (auto &x : m_entities.getEntities())
+		x->cShape->circle.setRotation(m_player->cShape->circle.getRotation() + 3);
 }
 
 void Game::sUserInput()
@@ -162,19 +167,24 @@ void Game::spawnPlayer()
 }
 void Game::sEnemySpawner()
 {
-	// call spawnEnemy here
+	spawnEnemy();
 }
 void Game::spawnEnemy()
 {
+	auto enemy = m_entities.addEntity("Enemy");
+
 	std::random_device dev;
 	std::mt19937 mt(dev());
-	std::uniform_real_distribution<float> x(0, 1200);
-	std::uniform_real_distribution<float> y(0, 800);
-    
-	auto enemy = m_entities.addEntity("Enemy");
+	enemy->cCollision = std::make_shared<CCollision>(30);
+
+	std::uniform_real_distribution<float> x(0 + enemy->cCollision->radius, 1200 - enemy->cCollision->radius);
+	std::uniform_real_distribution<float> y(0 + enemy->cCollision->radius, 800 - enemy->cCollision->radius);
+
+	std::uniform_int_distribution<int> colorx(0, 256);
+	std::uniform_int_distribution<int> sizex(3, 8);
+
 	enemy->cTransform = std::make_shared<CTransform>(Vec2(x(mt), y(mt)), Vec2(0, 0), 0);
-	enemy->cCollision = std::make_shared<CCollision>(100);
-	enemy->cShape = std::make_shared<CShape>(m_player->cCollision->radius, 3, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 3);
+	enemy->cShape = std::make_shared<CShape>(enemy->cCollision->radius, sizex(mt), sf::Color(colorx(mt), colorx(mt), colorx(mt)), sf::Color(colorx(mt), colorx(mt), colorx(mt)), 3);
 	enemy->cShape->circle.setPosition(enemy->cTransform->pos.x, enemy->cTransform->pos.y);
 }
 
