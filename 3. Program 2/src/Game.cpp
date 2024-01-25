@@ -168,6 +168,23 @@ void Game::sLifeSpan()
 			x->cShape->circle.setOutlineColor(out_color);
 		}
 	}
+	for (auto &x : m_entities.getEntities("Small Enemy"))
+	{
+		if (x->cLifespan->remaining == 0)
+		{
+			x->destroy();
+		}
+		else
+		{
+			x->cLifespan->remaining -= 1;
+			auto in_color = x->cShape->circle.getFillColor();
+			in_color.a -= 2;
+			auto out_color = x->cShape->circle.getOutlineColor();
+			out_color.a -= 2;
+			x->cShape->circle.setFillColor(in_color);
+			x->cShape->circle.setOutlineColor(out_color);
+		}
+	}
 }
 
 void Game::sRender()
@@ -198,6 +215,7 @@ void Game::sCollision()
 			{
 				x->destroy();
 				y->destroy();
+				spawnSmallEnemies(y);
 			}
 		}
 	}
@@ -238,6 +256,34 @@ void Game::spawnEnemy()
 
 void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)
 {
+	Vec2 pos;
+	Vec2 Velocity;
+	float angle = 90*(3.14/180);
+	float vx = cos(angle);
+	float vy = sin(angle);
+	float z = sqrt(parent->cTransform->pos.x * parent->cTransform->pos.x + 
+	              parent->cTransform->pos.y +  parent->cTransform->pos.y);
+    vx = vx / z;
+	vy = vy / z;
+
+	float velocity = 3;
+	if(vx > 0)
+		vx =+ velocity;
+	if(vx < 0)
+		vx -= velocity;
+	if(vy > 0)
+		vy += velocity;
+	if(vy < 0)
+		vy -=velocity;	
+    std::cout<<"speed "<<vx<<":"<<vy<<std::endl;
+	auto small = m_entities.addEntity("Small Enemy");
+	small->cTransform = std::make_shared<CTransform>(Vec2(parent->cTransform->pos.x, parent->cTransform->pos.y),
+													Vec2(vx,vy),10);
+	small->cShape = std::make_shared<CShape>(10,30,sf::Color(200,200,200),sf::Color(100,100,100),10);
+	small->cCollision = std::make_shared<CCollision>(10);
+	small->cLifespan = std::make_shared<CLifeSpan>(30);
+
+
 }
 
 // Spawns a bullet from a given entity to a target location
