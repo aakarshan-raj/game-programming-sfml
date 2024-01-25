@@ -72,6 +72,12 @@ void Game::sMovement()
 		x->cTransform->pos.x += x->cTransform->velocity.x;
 		x->cTransform->pos.y += x->cTransform->velocity.y;
 
+		if (x->cTransform->pos.x + x->cCollision->radius > 1200 || x->cTransform->pos.x - x->cCollision->radius < 0)
+			x->cTransform->velocity.x *= -1;
+
+		if (x->cTransform->pos.y + x->cCollision->radius > 800 || x->cTransform->pos.y - x->cCollision->radius < 0)
+			x->cTransform->velocity.y *= -1;
+
 		x->cShape->circle.setPosition(x->cTransform->pos.x + x->cTransform->velocity.x,
 									  x->cTransform->pos.y + x->cTransform->velocity.y);
 
@@ -92,6 +98,10 @@ void Game::sUserInput()
 		}
 		if (event.type == sf::Event::KeyPressed)
 		{
+			if (event.key.code == sf::Keyboard::Q)
+			{
+				m_window.close();
+			}
 			if (event.key.code == sf::Keyboard::W)
 			{
 				m_player->cInput->up = true;
@@ -191,7 +201,7 @@ void Game::spawnEnemy()
 	std::uniform_int_distribution<int> colorx(0, 256);
 	std::uniform_int_distribution<int> sizex(3, 8);
 
-	enemy->cTransform = std::make_shared<CTransform>(Vec2(x(mt), y(mt)), Vec2(0, 0), 3);
+	enemy->cTransform = std::make_shared<CTransform>(Vec2(x(mt), y(mt)), Vec2(1, 1), 3);
 	enemy->cShape = std::make_shared<CShape>(enemy->cCollision->radius, sizex(mt), sf::Color(colorx(mt), colorx(mt), colorx(mt)), sf::Color(colorx(mt), colorx(mt), colorx(mt)), 3);
 	enemy->cShape->circle.setPosition(enemy->cTransform->pos.x, enemy->cTransform->pos.y);
 }
@@ -218,7 +228,7 @@ void Game::spawnBullet(std::shared_ptr<Entity> shooter, const Vec2 &mousePos)
 													  Vec2(x, y), 10);
 	bullet->cLifespan = std::make_shared<CLifeSpan>(100);
 	bullet->cShape = std::make_shared<CShape>(20, 10, sf::Color(100, 100, 100), sf::Color(200, 200, 200), 9);
-	std::cout << "velocity:"<<bullet->cTransform->velocity.x<<":"<<bullet->cTransform->velocity.y << std::endl;
+	std::cout << "velocity:" << bullet->cTransform->velocity.x << ":" << bullet->cTransform->velocity.y << std::endl;
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
