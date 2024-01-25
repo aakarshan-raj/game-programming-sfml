@@ -24,7 +24,7 @@ void Game::run()
 		sRender();
 		// Increment the current frame
 		++m_currentFrame;
-		if (m_currentFrame % 60 == 0)
+		if (m_currentFrame % 100 == 0)
 		{
 			sEnemySpawner();
 		}
@@ -142,7 +142,6 @@ void Game::sUserInput()
 		{
 			if (event.mouseButton.button == sf::Mouse::Left)
 			{
-				std::cout << "(" << event.mouseButton.x << "," << event.mouseButton.y << ")" << std::endl;
 				Vec2 pos(event.mouseButton.x, event.mouseButton.y);
 				spawnBullet(m_player, pos);
 			}
@@ -152,6 +151,23 @@ void Game::sUserInput()
 
 void Game::sLifeSpan()
 {
+	for (auto &x : m_entities.getEntities("Bullet"))
+	{
+		if (x->cLifespan->remaining == 0)
+		{
+			x->destroy();
+		}
+		else
+		{
+			x->cLifespan->remaining -= 1;
+			auto in_color = x->cShape->circle.getFillColor();
+			in_color.a -= 2;
+			auto out_color = x->cShape->circle.getOutlineColor();
+			out_color.a -= 2;
+			x->cShape->circle.setFillColor(in_color);
+			x->cShape->circle.setOutlineColor(out_color);
+		}
+	}
 }
 
 void Game::sRender()
@@ -177,12 +193,12 @@ void Game::sCollision()
 	{
 		for (auto &y : m_entities.getEntities("Enemy"))
 		{
-				if (sqrt((x->cTransform->pos.x - y->cTransform->pos.x) * (x->cTransform->pos.x - y->cTransform->pos.x) + (x->cTransform->pos.y - y->cTransform->pos.y) * (x->cTransform->pos.y - y->cTransform->pos.y)) <=
-					x->cCollision->radius + y->cCollision->radius)
-				{
-					x->destroy();
-					y->destroy();
-				}
+			if (sqrt((x->cTransform->pos.x - y->cTransform->pos.x) * (x->cTransform->pos.x - y->cTransform->pos.x) + (x->cTransform->pos.y - y->cTransform->pos.y) * (x->cTransform->pos.y - y->cTransform->pos.y)) <=
+				x->cCollision->radius + y->cCollision->radius)
+			{
+				x->destroy();
+				y->destroy();
+			}
 		}
 	}
 }
@@ -192,7 +208,7 @@ void Game::spawnPlayer()
 
 	m_player = m_entities.addEntity("Player");
 	m_player->cTransform = std::make_shared<CTransform>(Vec2(400, 200), Vec2(0, 0), 3);
-	m_player->cCollision = std::make_shared<CCollision>(100);
+	m_player->cCollision = std::make_shared<CCollision>(50);
 	m_player->cShape = std::make_shared<CShape>(m_player->cCollision->radius, 5, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 3);
 	m_player->cShape->circle.setPosition(m_player->cTransform->pos.x, m_player->cTransform->pos.y);
 	m_player->cInput = std::make_shared<CInput>();
@@ -234,7 +250,15 @@ void Game::spawnBullet(std::shared_ptr<Entity> shooter, const Vec2 &mousePos)
 	float hypo = sqrt(a * a + b * b);
 	float x = a / hypo;
 	float y = b / hypo;
-	std::cout << "Unit vector:" << x << "," << y << std::endl;
+	float velocity = 3;
+	if(x > 0)
+		x =+ velocity;
+	if(x < 0)
+		x -= velocity;
+	if(y > 0)
+		y += velocity;
+	if(y < 0)
+		y -=velocity;	
 	auto bullet = m_entities.addEntity("Bullet");
 	bullet->cCollision = std::make_shared<CCollision>(20);
 	bullet->cTransform = std::make_shared<CTransform>(Vec2(shooter->cTransform->pos.x,
@@ -242,7 +266,7 @@ void Game::spawnBullet(std::shared_ptr<Entity> shooter, const Vec2 &mousePos)
 													  Vec2(x, y), 10);
 	bullet->cLifespan = std::make_shared<CLifeSpan>(100);
 	bullet->cShape = std::make_shared<CShape>(20, 10, sf::Color(100, 100, 100), sf::Color(200, 200, 200), 9);
-	std::cout << "velocity:" << bullet->cTransform->velocity.x << ":" << bullet->cTransform->velocity.y << std::endl;
+	bullet->cLifespan = std::make_shared<CLifeSpan>(100);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
