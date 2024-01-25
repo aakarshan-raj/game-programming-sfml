@@ -24,10 +24,10 @@ void Game::run()
 		sRender();
 		// Increment the current frame
 		++m_currentFrame;
-		// if (m_currentFrame % 60 == 0)
-		// {
-		// 	sEnemySpawner();
-		// }
+		if (m_currentFrame % 60 == 0)
+		{
+			sEnemySpawner();
+		}
 	}
 }
 
@@ -171,6 +171,20 @@ void Game::sRender()
 void Game::sCollision()
 {
 	// check for collisions, call other functions
+	// we can do it using radius . calculate the length of radius of 2 objects, if its less than the distance between them then they are colliding
+	// need nested loop:
+	for (auto &x : m_entities.getEntities("Bullet"))
+	{
+		for (auto &y : m_entities.getEntities("Enemy"))
+		{
+				if (sqrt((x->cTransform->pos.x - y->cTransform->pos.x) * (x->cTransform->pos.x - y->cTransform->pos.x) + (x->cTransform->pos.y - y->cTransform->pos.y) * (x->cTransform->pos.y - y->cTransform->pos.y)) <=
+					x->cCollision->radius + y->cCollision->radius)
+				{
+					x->destroy();
+					y->destroy();
+				}
+		}
+	}
 }
 
 void Game::spawnPlayer()
