@@ -258,26 +258,31 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)
 {
 	Vec2 pos;
 	Vec2 Velocity;
-	float degree = 90;
-	float angle = degree * (3.14 / 180);
-	float vx = cos(angle);
-	float vy = sin(angle);
-	float z = sqrt(parent->cTransform->pos.x * parent->cTransform->pos.x +
-				   parent->cTransform->pos.y + parent->cTransform->pos.y);
-	vx = vx / z;
-	vy = vy / z;
+	int sides = parent->cShape->circle.getPointCount();
+	float degree = 360 / sides;
 
-	float velocity = 3000;
-	vx *= velocity;
-	vy *= velocity;
+	for (int i = 1; i <= sides; i++)
+	{
+		float angle = (degree * (3.14 / 180)) * i;
+		float vx = cos(angle);
+		float vy = sin(angle);
+		float z = sqrt(parent->cTransform->pos.x * parent->cTransform->pos.x +
+					   parent->cTransform->pos.y + parent->cTransform->pos.y);
+		vx = vx / z;
+		vy = vy / z;
 
-	std::cout << "speed " << vx << ":" << vy << std::endl;
-	auto small = m_entities.addEntity("Small Enemy");
-	small->cTransform = std::make_shared<CTransform>(Vec2(parent->cTransform->pos.x, parent->cTransform->pos.y),
-													 Vec2(vx, vy), 10);
-	small->cShape = std::make_shared<CShape>(10, 30, sf::Color(200, 200, 200), sf::Color(100, 100, 100), 10);
-	small->cCollision = std::make_shared<CCollision>(10);
-	small->cLifespan = std::make_shared<CLifeSpan>(30);
+		float velocity = 3000;
+		vx *= velocity;
+		vy *= velocity;
+
+		std::cout << "speed " << vx << ":" << vy << std::endl;
+		auto small = m_entities.addEntity("Small Enemy");
+		small->cTransform = std::make_shared<CTransform>(Vec2(parent->cTransform->pos.x, parent->cTransform->pos.y),
+														 Vec2(vx, vy), 10);
+		small->cShape = std::make_shared<CShape>(10, 30, sf::Color(200, 200, 200), sf::Color(100, 100, 100), 10);
+		small->cCollision = std::make_shared<CCollision>(10);
+		small->cLifespan = std::make_shared<CLifeSpan>(30);
+	}
 }
 
 // Spawns a bullet from a given entity to a target location
