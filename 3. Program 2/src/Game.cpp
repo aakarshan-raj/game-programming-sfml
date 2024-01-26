@@ -258,32 +258,26 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)
 {
 	Vec2 pos;
 	Vec2 Velocity;
-	float angle = 90*(3.14/180);
+	float degree = 90;
+	float angle = degree * (3.14 / 180);
 	float vx = cos(angle);
 	float vy = sin(angle);
-	float z = sqrt(parent->cTransform->pos.x * parent->cTransform->pos.x + 
-	              parent->cTransform->pos.y +  parent->cTransform->pos.y);
-    vx = vx / z;
+	float z = sqrt(parent->cTransform->pos.x * parent->cTransform->pos.x +
+				   parent->cTransform->pos.y + parent->cTransform->pos.y);
+	vx = vx / z;
 	vy = vy / z;
 
-	float velocity = 3;
-	if(vx > 0)
-		vx =+ velocity;
-	if(vx < 0)
-		vx -= velocity;
-	if(vy > 0)
-		vy += velocity;
-	if(vy < 0)
-		vy -=velocity;	
-    std::cout<<"speed "<<vx<<":"<<vy<<std::endl;
+	float velocity = 3000;
+	vx *= velocity;
+	vy *= velocity;
+
+	std::cout << "speed " << vx << ":" << vy << std::endl;
 	auto small = m_entities.addEntity("Small Enemy");
 	small->cTransform = std::make_shared<CTransform>(Vec2(parent->cTransform->pos.x, parent->cTransform->pos.y),
-													Vec2(vx,vy),10);
-	small->cShape = std::make_shared<CShape>(10,30,sf::Color(200,200,200),sf::Color(100,100,100),10);
+													 Vec2(vx, vy), 10);
+	small->cShape = std::make_shared<CShape>(10, 30, sf::Color(200, 200, 200), sf::Color(100, 100, 100), 10);
 	small->cCollision = std::make_shared<CCollision>(10);
 	small->cLifespan = std::make_shared<CLifeSpan>(30);
-
-
 }
 
 // Spawns a bullet from a given entity to a target location
@@ -297,14 +291,9 @@ void Game::spawnBullet(std::shared_ptr<Entity> shooter, const Vec2 &mousePos)
 	float x = a / hypo;
 	float y = b / hypo;
 	float velocity = 3;
-	if(x > 0)
-		x =+ velocity;
-	if(x < 0)
-		x -= velocity;
-	if(y > 0)
-		y += velocity;
-	if(y < 0)
-		y -=velocity;	
+
+	x *= velocity;
+	y *= velocity;
 	auto bullet = m_entities.addEntity("Bullet");
 	bullet->cCollision = std::make_shared<CCollision>(20);
 	bullet->cTransform = std::make_shared<CTransform>(Vec2(shooter->cTransform->pos.x,
