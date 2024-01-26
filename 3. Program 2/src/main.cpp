@@ -9,7 +9,7 @@ void test_vec2();
 int main()
 {
     // test_vec2();
-    Game g("config");
+    Game g("config/config");
     g.run();
 }
 

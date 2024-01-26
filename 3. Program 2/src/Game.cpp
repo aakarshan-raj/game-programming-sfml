@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <math.h>
+#include <fstream>
 
 Game::Game(const std::string &configFile)
 {
@@ -22,7 +23,6 @@ void Game::run()
 		}
 		sUserInput();
 		sRender();
-		// Increment the current frame
 		++m_currentFrame;
 		if (m_currentFrame % 100 == 0)
 		{
@@ -33,10 +33,101 @@ void Game::run()
 
 void Game::init(const std::string &config)
 {
-	m_window.create(sf::VideoMode(1200, 800), "hi");
-	m_window.setFramerateLimit(60);
+	std::ifstream file_handler;
+	file_handler.open(config);
+	if (file_handler.fail())
+	{
+		std::cout << "Error reading configurations." << std::endl;
+		exit(-1);
+	}
+	std::string data;
+	int WIDTH;
+	int HEIGHT;
+	int FRAME;
+	bool FULL_SCREEN;
+	std::string font_path;
+	int font_size;
+	int R, B, G;
+	while (file_handler >> data)
+	{
+		if (data == "Window")
+		{
+			file_handler >> WIDTH;
+			file_handler >> HEIGHT;
+			file_handler >> FRAME;
+			file_handler >> FULL_SCREEN;
+		}
+		else if (data == "Font")
+		{
+			file_handler >> font_path;
+			file_handler >> font_size;
+			file_handler >> R;
+			file_handler >> G;
+			file_handler >> B;
+		}
+		else if (data == "Player")
+		{
+			file_handler >> m_playerConfig.SR;
+			file_handler >> m_playerConfig.CR;
+			file_handler >> m_playerConfig.FR;
+			file_handler >> m_playerConfig.FG;
+			file_handler >> m_playerConfig.FB;
+			file_handler >> m_playerConfig.OR;
+			file_handler >> m_playerConfig.OG;
+			file_handler >> m_playerConfig.OB;
+			file_handler >> m_playerConfig.OT;
+			file_handler >> m_playerConfig.V;
+			file_handler >> m_playerConfig.S;
+		}
+		else if (data == "Enemy")
+		{
+			file_handler >> m_enemyConfig.SR;
+			file_handler >> m_enemyConfig.CR;
+			file_handler >> m_enemyConfig.OR;
+			file_handler >> m_enemyConfig.OG;
+			file_handler >> m_enemyConfig.OB;
+			file_handler >> m_enemyConfig.OT;
+			file_handler >> m_enemyConfig.VMIN;
+			file_handler >> m_enemyConfig.VMAX;
+			file_handler >> m_enemyConfig.L;
+			file_handler >> m_enemyConfig.SI;
+			file_handler >> m_enemyConfig.SMIN;
+			file_handler >> m_enemyConfig.SMAX;
+		}
+		else if (data == "Bullet")
+		{
+			file_handler >> m_bulletConfig.SR;
+			file_handler >> m_bulletConfig.CR;
+			file_handler >> m_bulletConfig.FR;
+			file_handler >> m_bulletConfig.FG;
+			file_handler >> m_bulletConfig.FB;
+			file_handler >> m_bulletConfig.OR;
+			file_handler >> m_bulletConfig.OG;
+			file_handler >> m_bulletConfig.OB;
+			file_handler >> m_bulletConfig.OT;
+			file_handler >> m_bulletConfig.V;
+			file_handler >> m_bulletConfig.L;
+			file_handler >> m_bulletConfig.SB;
+			file_handler >> m_bulletConfig.S;
+		}
+	}
+
+	m_window.create(sf::VideoMode(WIDTH, HEIGHT), "Game");
+	m_window.setFramerateLimit(FRAME);
 	spawnPlayer();
 	spawnEnemy();
+	if (!m_font.loadFromFile(font_path))
+	{
+		std::cout << "No Fonts Found" << std::endl;
+		exit(-1);
+	}
+	
+	m_scoreText.setString("Score: 0");
+	m_scoreText.setFont(m_font);
+    m_scoreText.setCharacterSize(font_size);
+	m_scoreText.setPosition(0,0);
+	m_scoreText.setColor(sf::Color(R,G,B));
+
 }
 
 void Game::setPaused(bool paused)
@@ -49,46 +140,44 @@ void Game::sMovement()
 	if (m_player->cInput->up == true)
 	{
 		if (m_player->cShape->circle.getPosition().y - m_player->cCollision->radius > 0)
-			m_player->cTransform->pos.y -= 10;
+			m_player->cTransform->pos.y -= m_playerConfig.S;
 	}
 	if (m_player->cInput->down == true)
 	{
-		if (m_player->cShape->circle.getPosition().y + m_player->cCollision->radius < 800)
-			m_player->cTransform->pos.y += 10;
+		if (m_player->cShape->circle.getPosition().y + m_player->cCollision->radius < m_window.getSize().y)
+			m_player->cTransform->pos.y += m_playerConfig.S;
 	}
 	if (m_player->cInput->left == true)
 	{
 		if (m_player->cShape->circle.getPosition().x - m_player->cCollision->radius > 0)
-			m_player->cTransform->pos.x -= 10;
+			m_player->cTransform->pos.x -= m_playerConfig.S;
 	}
 	if (m_player->cInput->right == true)
 	{
-		if (m_player->cShape->circle.getPosition().x + m_player->cCollision->radius < 1200)
-			m_player->cTransform->pos.x += 10;
+		if (m_player->cShape->circle.getPosition().x + m_player->cCollision->radius < m_window.getSize().x)
+			m_player->cTransform->pos.x += m_playerConfig.S;
+	}
+	for (auto &x : m_entities.getEntities("Enemy"))
+	{
+		if (x->cTransform->pos.x + x->cCollision->radius > m_window.getSize().x || x->cTransform->pos.x - x->cCollision->radius < 0)
+			x->cTransform->velocity.x *= -1;
+
+		if (x->cTransform->pos.y + x->cCollision->radius > m_window.getSize().y || x->cTransform->pos.y - x->cCollision->radius < 0)
+			x->cTransform->velocity.y *= -1;
 	}
 	for (auto &x : m_entities.getEntities())
 	{
-		// Positions
 		x->cTransform->pos.x += x->cTransform->velocity.x;
 		x->cTransform->pos.y += x->cTransform->velocity.y;
-
-		if (x->cTransform->pos.x + x->cCollision->radius > 1200 || x->cTransform->pos.x - x->cCollision->radius < 0)
-			x->cTransform->velocity.x *= -1;
-
-		if (x->cTransform->pos.y + x->cCollision->radius > 800 || x->cTransform->pos.y - x->cCollision->radius < 0)
-			x->cTransform->velocity.y *= -1;
-
 		x->cShape->circle.setPosition(x->cTransform->pos.x + x->cTransform->velocity.x,
 									  x->cTransform->pos.y + x->cTransform->velocity.y);
 
-		// Rotations
 		x->cShape->circle.setRotation(m_player->cShape->circle.getRotation() + m_player->cTransform->angle);
 	}
 }
 
 void Game::sUserInput()
 {
-	// handle all user input, close, pause, up,down,left,right, mouse click, only set state here. No movements here
 	sf::Event event;
 	while (m_window.pollEvent(event))
 	{
@@ -178,9 +267,9 @@ void Game::sLifeSpan()
 		{
 			x->cLifespan->remaining -= 1;
 			auto in_color = x->cShape->circle.getFillColor();
-			in_color.a -= 2;
+			in_color.a -= 20;
 			auto out_color = x->cShape->circle.getOutlineColor();
-			out_color.a -= 2;
+			out_color.a -= 20;
 			x->cShape->circle.setFillColor(in_color);
 			x->cShape->circle.setOutlineColor(out_color);
 		}
@@ -189,23 +278,19 @@ void Game::sLifeSpan()
 
 void Game::sRender()
 {
-	// Clear
-	//  Logic to change position for the enemies
-	// Draw
-	// Display
+	
+	m_scoreText.setString("Score:"+ std::to_string(m_player->cScore->score));
 	m_window.clear();
 	for (const std::shared_ptr<Entity> &x : m_entities.getEntities())
 	{
 		m_window.draw(x->cShape->circle);
 	}
+	m_window.draw(m_scoreText);
 	m_window.display();
 }
 
 void Game::sCollision()
 {
-	// check for collisions, call other functions
-	// we can do it using radius . calculate the length of radius of 2 objects, if its less than the distance between them then they are colliding
-	// need nested loop:
 	for (auto &x : m_entities.getEntities("Bullet"))
 	{
 		for (auto &y : m_entities.getEntities("Enemy"))
@@ -216,6 +301,20 @@ void Game::sCollision()
 				x->destroy();
 				y->destroy();
 				spawnSmallEnemies(y);
+				m_player->cScore->score++;
+			}
+		}
+	}
+	for (auto &x : m_entities.getEntities("Enemy"))
+	{
+		for (auto &y : m_entities.getEntities("Player"))
+		{
+			if (sqrt((x->cTransform->pos.x - y->cTransform->pos.x) * (x->cTransform->pos.x - y->cTransform->pos.x) + (x->cTransform->pos.y - y->cTransform->pos.y) * (x->cTransform->pos.y - y->cTransform->pos.y)) <=
+				x->cCollision->radius + y->cCollision->radius)
+			{
+				x->destroy();
+				spawnSmallEnemies(x);
+				m_player->cScore->score--;
 			}
 		}
 	}
@@ -226,10 +325,11 @@ void Game::spawnPlayer()
 
 	m_player = m_entities.addEntity("Player");
 	m_player->cTransform = std::make_shared<CTransform>(Vec2(400, 200), Vec2(0, 0), 3);
-	m_player->cCollision = std::make_shared<CCollision>(50);
-	m_player->cShape = std::make_shared<CShape>(m_player->cCollision->radius, 5, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 3);
+	m_player->cCollision = std::make_shared<CCollision>(m_playerConfig.CR);
+	m_player->cShape = std::make_shared<CShape>(m_playerConfig.SR, m_playerConfig.V, sf::Color(m_playerConfig.FR, m_playerConfig.FG, m_playerConfig.FB), sf::Color(m_playerConfig.OR, m_playerConfig.OG, m_playerConfig.OB), m_playerConfig.OT);
 	m_player->cShape->circle.setPosition(m_player->cTransform->pos.x, m_player->cTransform->pos.y);
 	m_player->cInput = std::make_shared<CInput>();
+	m_player->cScore = std::make_shared<CScore>(0);
 }
 void Game::sEnemySpawner()
 {
@@ -241,16 +341,19 @@ void Game::spawnEnemy()
 
 	std::random_device dev;
 	std::mt19937 mt(dev());
-	enemy->cCollision = std::make_shared<CCollision>(30);
+	enemy->cCollision = std::make_shared<CCollision>(m_enemyConfig.CR);
 
-	std::uniform_real_distribution<float> x(0 + enemy->cCollision->radius, 1200 - enemy->cCollision->radius);
-	std::uniform_real_distribution<float> y(0 + enemy->cCollision->radius, 800 - enemy->cCollision->radius);
+	std::uniform_real_distribution<float> x(0 + enemy->cCollision->radius, m_window.getSize().x - enemy->cCollision->radius);
+	std::uniform_real_distribution<float> y(0 + enemy->cCollision->radius, m_window.getSize().y - enemy->cCollision->radius);
+
+	std::uniform_real_distribution<float> x_speed(m_enemyConfig.SMIN, m_enemyConfig.SMAX);
+	std::uniform_real_distribution<float> y_speed(m_enemyConfig.SMIN, m_enemyConfig.SMAX);
 
 	std::uniform_int_distribution<int> colorx(0, 256);
-	std::uniform_int_distribution<int> sizex(3, 8);
+	std::uniform_int_distribution<int> sizex(m_enemyConfig.VMIN, m_enemyConfig.VMAX);
 
-	enemy->cTransform = std::make_shared<CTransform>(Vec2(x(mt), y(mt)), Vec2(1, 1), 3);
-	enemy->cShape = std::make_shared<CShape>(enemy->cCollision->radius, sizex(mt), sf::Color(colorx(mt), colorx(mt), colorx(mt)), sf::Color(colorx(mt), colorx(mt), colorx(mt)), 3);
+	enemy->cTransform = std::make_shared<CTransform>(Vec2(x(mt), y(mt)), Vec2(x_speed(mt), y_speed(mt)), 3);
+	enemy->cShape = std::make_shared<CShape>(m_enemyConfig.SR, sizex(mt), sf::Color(colorx(mt), colorx(mt), colorx(mt)), sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB), m_enemyConfig.OT);
 	enemy->cShape->circle.setPosition(enemy->cTransform->pos.x, enemy->cTransform->pos.y);
 }
 
@@ -275,38 +378,33 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> parent)
 		vx *= velocity;
 		vy *= velocity;
 
-		std::cout << "speed " << vx << ":" << vy << std::endl;
 		auto small = m_entities.addEntity("Small Enemy");
 		small->cTransform = std::make_shared<CTransform>(Vec2(parent->cTransform->pos.x, parent->cTransform->pos.y),
 														 Vec2(vx, vy), 10);
-		small->cShape = std::make_shared<CShape>(10, 30, sf::Color(200, 200, 200), sf::Color(100, 100, 100), 10);
-		small->cCollision = std::make_shared<CCollision>(10);
-		small->cLifespan = std::make_shared<CLifeSpan>(30);
+		small->cShape = std::make_shared<CShape>(10, parent->cShape->circle.getPointCount(), sf::Color(parent->cShape->circle.getFillColor()), sf::Color(parent->cShape->circle.getOutlineColor()), m_enemyConfig.OT);
+		small->cLifespan = std::make_shared<CLifeSpan>(m_enemyConfig.L);
 	}
 }
 
-// Spawns a bullet from a given entity to a target location
 void Game::spawnBullet(std::shared_ptr<Entity> shooter, const Vec2 &mousePos)
 {
-	// calculate velocity, set transform, shape
 	float a = mousePos.x - shooter->cTransform->pos.x;
 	float b = mousePos.y - shooter->cTransform->pos.y;
 
 	float hypo = sqrt(a * a + b * b);
 	float x = a / hypo;
 	float y = b / hypo;
-	float velocity = 3;
+	float velocity = m_bulletConfig.S;
 
 	x *= velocity;
 	y *= velocity;
 	auto bullet = m_entities.addEntity("Bullet");
-	bullet->cCollision = std::make_shared<CCollision>(20);
+	bullet->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
 	bullet->cTransform = std::make_shared<CTransform>(Vec2(shooter->cTransform->pos.x,
 														   shooter->cTransform->pos.y),
 													  Vec2(x, y), 10);
-	bullet->cLifespan = std::make_shared<CLifeSpan>(100);
-	bullet->cShape = std::make_shared<CShape>(20, 10, sf::Color(100, 100, 100), sf::Color(200, 200, 200), 9);
-	bullet->cLifespan = std::make_shared<CLifeSpan>(100);
+	bullet->cShape = std::make_shared<CShape>(m_bulletConfig.SR, m_bulletConfig.V, sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB), sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB), m_bulletConfig.OT);
+	bullet->cLifespan = std::make_shared<CLifeSpan>(m_bulletConfig.L);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
