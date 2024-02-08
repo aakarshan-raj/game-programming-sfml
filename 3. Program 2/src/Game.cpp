@@ -207,6 +207,10 @@ void Game::sUserInput()
 			{
 				m_player->cInput->right = true;
 			}
+			if (event.key.code == sf::Keyboard::P)
+			{
+				m_paused = !m_paused;
+			}
 		}
 		if (event.type == sf::Event::KeyReleased)
 		{
