@@ -6,14 +6,13 @@
 #include "Components.h"
 #include <cmath>
 
-GameState_Play::GameState_Play(GameEngine & game, const std::string & levelPath)
-    : GameState(game)
-    , m_levelPath(levelPath)
+GameState_Play::GameState_Play(GameEngine &game, const std::string &levelPath)
+    : GameState(game), m_levelPath(levelPath)
 {
     init(m_levelPath);
 }
 
-void GameState_Play::init(const std::string & levelPath)
+void GameState_Play::init(const std::string &levelPath)
 {
     loadLevel(levelPath);
 
@@ -40,11 +39,11 @@ void GameState_Play::init(const std::string & levelPath)
     question->addComponent<CAnimation>(m_game.getAssets().getAnimation("Question"), true);
 }
 
-void GameState_Play::loadLevel(const std::string & filename)
+void GameState_Play::loadLevel(const std::string &filename)
 {
     // reset the entity manager every time we load a level
     m_entityManager = EntityManager();
-    
+
     // TODO: read in the level file and add the appropriate entities
     //       use the PlayerConfig struct m_playerConfig to store player properties
     //       this struct is defined at the top of GameState_Play.h
@@ -57,7 +56,10 @@ void GameState_Play::spawnPlayer()
     m_player->addComponent<CTransform>(Vec2(200, 200));
     m_player->addComponent<CBoundingBox>(Vec2(48, 48));
     m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Stand"), true);
-        
+    m_player->addComponent<CInput>();
+    m_player->addComponent<CState>("stand");
+    m_player->addComponent<CGravity>(9.8);
+
     // TODO: be sure to add the remaining components to the player
 }
 
@@ -85,6 +87,18 @@ void GameState_Play::sMovement()
     // TODO: Implement player movement / jumping based on its CInput component
     // TODO: Implement gravity's effect on the player
     // TODO: Implement the maxmimum player speed in both X and Y directions
+    if (m_player->getComponent<CInput>()->up == true)
+    {
+        m_player->getComponent<CTransform>()->pos.y += 1;
+    }
+    else if (m_player->getComponent<CInput>()->left == true)
+    {
+        m_player->getComponent<CTransform>()->pos.x -= 1;
+    }
+    else if (m_player->getComponent<CInput>()->right == true)
+    {
+        m_player->getComponent<CTransform>()->pos.x += 1;
+    }
 }
 
 void GameState_Play::sLifespan()
@@ -122,11 +136,51 @@ void GameState_Play::sUserInput()
         {
             switch (event.key.code)
             {
-                case sf::Keyboard::Escape:  { m_game.popState(); break; }
-                case sf::Keyboard::Z:       { init(m_levelPath); break; }
-                case sf::Keyboard::R:       { m_drawTextures = !m_drawTextures; break; }
-                case sf::Keyboard::F:       { m_drawCollision = !m_drawCollision; break; }
-                case sf::Keyboard::P:       { setPaused(!m_paused); break; }
+            case sf::Keyboard::Escape:
+            {
+                m_game.popState();
+                break;
+            }
+            case sf::Keyboard::Z:
+            {
+                init(m_levelPath);
+                break;
+            }
+            case sf::Keyboard::R:
+            {
+                m_drawTextures = !m_drawTextures;
+                break;
+            }
+            case sf::Keyboard::F:
+            {
+                m_drawCollision = !m_drawCollision;
+                break;
+            }
+            case sf::Keyboard::P:
+            {
+                setPaused(!m_paused);
+                break;
+            }
+            case sf::Keyboard::W:
+            {
+                m_player->getComponent<CInput>()->up = true;
+                m_player->getComponent<CState>()->state = "Air";
+                break;
+            }
+            case sf::Keyboard::A:
+            {
+                m_player->getComponent<CInput>()->left = true;
+                m_player->getComponent<CState>()->state = "Run";
+                m_player->getComponent<CTransform>()->scale = {-1.0f, 1};
+                break;
+            }
+            case sf::Keyboard::D:
+            {
+                m_player->getComponent<CInput>()->right = true;
+                m_player->getComponent<CState>()->state = "Run";
+                m_player->getComponent<CTransform>()->scale = {1, 1};
+                break;
+            }
             }
         }
 
@@ -134,11 +188,31 @@ void GameState_Play::sUserInput()
         {
             switch (event.key.code)
             {
-                case sf::Keyboard::Escape: { break; }
+            case sf::Keyboard::Escape:
+            {
+                break;
+            }
+            case sf::Keyboard::W:
+            {
+                m_player->getComponent<CInput>()->up = false;
+                m_player->getComponent<CState>()->state = "Stand";
+                break;
+            }
+            case sf::Keyboard::A:
+            {
+                m_player->getComponent<CInput>()->left = false;
+                m_player->getComponent<CState>()->state = "Stand";
+                break;
+            }
+            case sf::Keyboard::D:
+            {
+                m_player->getComponent<CInput>()->right = false;
+                m_player->getComponent<CState>()->state = "Stand";
+                break;
+            }
             }
         }
     }
-
 }
 
 void GameState_Play::sAnimation()
@@ -146,14 +220,40 @@ void GameState_Play::sAnimation()
     // TODO: set the animation of the player based on its CState component
     // TODO: for each entity with an animation, call entity->getComponent<CAnimation>()->animation.update()
     //       if the animation is not repeated, and it has ended, destroy the entity
+    if (m_player->getComponent<CState>()->state == m_player->getComponent<CAnimation>()->animation.getName())
+    {
+    }
+    else
+    {
+        if (m_player->getComponent<CState>()->state == "Stand")
+        {
+            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Stand");
+        }
+        else if (m_player->getComponent<CState>()->state == "Air")
+        {
+            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Air");
+        }
+        else if (m_player->getComponent<CState>()->state == "Run")
+        {
+            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Run");
+        }
+    }
+
+    m_player->getComponent<CAnimation>()->animation.update();
 }
 
 // this function has been completed for you
 void GameState_Play::sRender()
 {
     // color the background darker so you know that the game is paused
-    if (!m_paused)  { m_game.window().clear(sf::Color(100, 100, 255)); }
-    else            { m_game.window().clear(sf::Color(50, 50, 150)); }
+    if (!m_paused)
+    {
+        m_game.window().clear(sf::Color(100, 100, 255));
+    }
+    else
+    {
+        m_game.window().clear(sf::Color(50, 50, 150));
+    }
 
     // set the viewport of the window to be centered on the player if it's far enough right
     auto pPos = m_player->getComponent<CTransform>()->pos;
@@ -161,7 +261,7 @@ void GameState_Play::sRender()
     sf::View view = m_game.window().getView();
     view.setCenter(windowCenterX, m_game.window().getSize().y - view.getCenter().y);
     m_game.window().setView(view);
-        
+
     // draw all Entity textures / animations
     if (m_drawTextures)
     {
@@ -190,7 +290,7 @@ void GameState_Play::sRender()
                 auto box = e->getComponent<CBoundingBox>();
                 auto transform = e->getComponent<CTransform>();
                 sf::RectangleShape rect;
-                rect.setSize(sf::Vector2f(box->size.x-1, box->size.y-1));
+                rect.setSize(sf::Vector2f(box->size.x - 1, box->size.y - 1));
                 rect.setOrigin(sf::Vector2f(box->halfSize.x, box->halfSize.y));
                 rect.setPosition(transform->pos.x, m_game.window().getSize().y - transform->pos.y);
                 rect.setFillColor(sf::Color(0, 0, 0, 0));
