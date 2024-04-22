@@ -75,7 +75,7 @@ void GameState_Play::loadLevel(const std::string &filename)
             file >> m_playerConfig.X >> m_playerConfig.Y >>
                 m_playerConfig.CX >> m_playerConfig.CY >>
                 m_playerConfig.SPEED >> m_playerConfig.MAXSPEED >>
-                m_playerConfig.JUMP >> m_playerConfig.GRAVITY;
+                m_playerConfig.JUMP >> m_playerConfig.GRAVITY >> m_playerConfig.WEAPON;
         }
     }
 }
@@ -97,6 +97,21 @@ void GameState_Play::spawnPlayer()
 void GameState_Play::spawnBullet(std::shared_ptr<Entity> entity)
 {
     // TODO: this should spawn a bullet at the given entity, going in the direction the entity is facing
+    auto bullet = m_entityManager.addEntity("bullet");
+    float direction = 11.0f;
+    if (m_player->getComponent<CTransform>()->scale.x < 0)
+    {
+        direction = -11.0f;
+    }
+
+    bullet->addComponent<CAnimation>(m_game.getAssets().getAnimation(m_playerConfig.WEAPON), true);
+    bullet->addComponent<CTransform>(Vec2(entity->getComponent<CTransform>()->pos.x, entity->getComponent<CTransform>()->pos.y),
+                                     Vec2(direction, 0.0f),
+                                     Vec2(1.0f, 1.0f),
+                                     0.0f);
+    bullet->addComponent<CLifeSpan>(40);
+    bullet->addComponent<CBoundingBox>(Vec2(m_game.getAssets().getAnimation(m_playerConfig.WEAPON).getSize().x,
+                                            m_game.getAssets().getAnimation(m_playerConfig.WEAPON).getSize().y));
 }
 
 void GameState_Play::update()
@@ -135,6 +150,20 @@ void GameState_Play::sMovement()
 void GameState_Play::sLifespan()
 {
     // TODO: Check lifespawn of entities that have them, and destroy them if they go over
+    for (auto &e : m_entityManager.getEntities())
+    {
+        if (e->hasComponent<CLifeSpan>())
+        {
+            if (e->getComponent<CLifeSpan>()->lifespan < 0)
+            {
+                e->destroy();
+            }
+            else
+            {
+                e->getComponent<CLifeSpan>()->lifespan -= 1;
+            }
+        }
+    }
 }
 
 void GameState_Play::sCollision()
@@ -212,6 +241,11 @@ void GameState_Play::sUserInput()
                 m_player->getComponent<CTransform>()->scale = {1, 1};
                 break;
             }
+            case sf::Keyboard::Space:
+            {
+                spawnBullet(m_player);
+                break;
+            }
             }
         }
 
@@ -269,8 +303,17 @@ void GameState_Play::sAnimation()
             m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Run");
         }
     }
-
-    m_player->getComponent<CAnimation>()->animation.update();
+    for (auto &e : m_entityManager.getEntities())
+    {
+        if (e->hasComponent<CLifeSpan>())
+        {
+            if (e->getComponent<CLifeSpan>()->lifespan == 5)
+            {
+                e->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Explosion");
+            }
+        }
+        e->getComponent<CAnimation>()->animation.update();
+    }
 }
 
 // this function has been completed for you
@@ -300,11 +343,14 @@ void GameState_Play::sRender()
         {
             auto transform = e->getComponent<CTransform>();
 
+            transform->pos.x = transform->pos.x + transform->speed.x;
+            transform->pos.y = transform->pos.y + transform->speed.y;
+
             if (e->hasComponent<CAnimation>())
             {
                 auto animation = e->getComponent<CAnimation>()->animation;
                 animation.getSprite().setRotation(transform->angle);
-                animation.getSprite().setPosition(transform->pos.x, m_game.window().getSize().y - transform->pos.y);
+                animation.getSprite().setPosition(transform->pos.x, m_game.window().getSize().y - transform->pos.y); // Reverse SFML y-co-ordinate system
                 animation.getSprite().setScale(transform->scale.x, transform->scale.y);
                 m_game.window().draw(animation.getSprite());
             }
