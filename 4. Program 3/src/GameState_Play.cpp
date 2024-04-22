@@ -5,6 +5,7 @@
 #include "GameEngine.h"
 #include "Components.h"
 #include <cmath>
+#include <fstream>
 
 GameState_Play::GameState_Play(GameEngine &game, const std::string &levelPath)
     : GameState(game), m_levelPath(levelPath)
@@ -47,18 +48,48 @@ void GameState_Play::loadLevel(const std::string &filename)
     // TODO: read in the level file and add the appropriate entities
     //       use the PlayerConfig struct m_playerConfig to store player properties
     //       this struct is defined at the top of GameState_Play.h
+    std::ifstream file;
+    file.open(filename);
+    std::string word;
+    std::string animation_name;
+    float x;
+    float y;
+    while (file >> word)
+    {
+        if (word == "Dec")
+        {
+            file >> animation_name >> x >> y;
+            auto entity = m_entityManager.addEntity("dec");
+            entity->addComponent<CTransform>(Vec2(x, y));
+            entity->addComponent<CAnimation>(m_game.getAssets().getAnimation(animation_name), true);
+        }
+        else if (word == "Tile")
+        {
+            file >> animation_name >> x >> y;
+            auto entity = m_entityManager.addEntity("tile");
+            entity->addComponent<CTransform>(Vec2(x, y));
+            entity->addComponent<CAnimation>(m_game.getAssets().getAnimation(animation_name), true);
+        }
+        else if (word == "Player")
+        {
+            file >> m_playerConfig.X >> m_playerConfig.Y >>
+                m_playerConfig.CX >> m_playerConfig.CY >>
+                m_playerConfig.SPEED >> m_playerConfig.MAXSPEED >>
+                m_playerConfig.JUMP >> m_playerConfig.GRAVITY;
+        }
+    }
 }
 
 void GameState_Play::spawnPlayer()
 {
     // here is a sample player entity which you can use to construct other entities
     m_player = m_entityManager.addEntity("player");
-    m_player->addComponent<CTransform>(Vec2(200, 200));
-    m_player->addComponent<CBoundingBox>(Vec2(48, 48));
+    m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, m_playerConfig.Y));
+    m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Stand"), true);
     m_player->addComponent<CInput>();
     m_player->addComponent<CState>("stand");
-    m_player->addComponent<CGravity>(9.8);
+    m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
 
     // TODO: be sure to add the remaining components to the player
 }
@@ -89,15 +120,15 @@ void GameState_Play::sMovement()
     // TODO: Implement the maxmimum player speed in both X and Y directions
     if (m_player->getComponent<CInput>()->up == true)
     {
-        m_player->getComponent<CTransform>()->pos.y += 1;
+        m_player->getComponent<CTransform>()->pos.y += m_playerConfig.JUMP;
     }
     else if (m_player->getComponent<CInput>()->left == true)
     {
-        m_player->getComponent<CTransform>()->pos.x -= 1;
+        m_player->getComponent<CTransform>()->pos.x -= m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->right == true)
     {
-        m_player->getComponent<CTransform>()->pos.x += 1;
+        m_player->getComponent<CTransform>()->pos.x += m_playerConfig.SPEED;
     }
 }
 

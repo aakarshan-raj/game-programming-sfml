@@ -18,6 +18,8 @@ Texture   TexBlock   images/mario/block.png
 Texture   TexPole    images/mario/flagpole.png
 Texture   TexPoleTop images/mario/flagtop.png
 Texture   TexFlag    images/mario/flag.png
+Texture   Cat        images/misc/cat.png
+Animation Acat       Cat    1    0   
 Animation Stand      TexStand    1    0   
 Animation Run        TexRun      3   10    
 Animation Air        TexAir      1    0  
