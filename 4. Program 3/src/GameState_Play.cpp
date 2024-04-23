@@ -18,26 +18,6 @@ void GameState_Play::init(const std::string &levelPath)
     loadLevel(levelPath);
 
     spawnPlayer();
-
-    // some sample entities
-    auto brick = m_entityManager.addEntity("tile");
-    brick->addComponent<CTransform>(Vec2(100, 400));
-    brick->addComponent<CAnimation>(m_game.getAssets().getAnimation("Brick"), true);
-
-    if (brick->getComponent<CAnimation>()->animation.getName() == "Brick")
-    {
-        std::cout << "This could be a good way of identifying if a tile is a brick!\n";
-    }
-
-    auto block = m_entityManager.addEntity("tile");
-    block->addComponent<CTransform>(Vec2(200, 400));
-    block->addComponent<CAnimation>(m_game.getAssets().getAnimation("Block"), true);
-    // add a bounding box, this will now show up if we press the 'F' key
-    block->addComponent<CBoundingBox>(m_game.getAssets().getAnimation("Block").getSize());
-
-    auto question = m_entityManager.addEntity("tile");
-    question->addComponent<CTransform>(Vec2(300, 400));
-    question->addComponent<CAnimation>(m_game.getAssets().getAnimation("Question"), true);
 }
 
 void GameState_Play::loadLevel(const std::string &filename)
@@ -66,9 +46,10 @@ void GameState_Play::loadLevel(const std::string &filename)
         else if (word == "Tile")
         {
             file >> animation_name >> x >> y;
-            auto entity = m_entityManager.addEntity("tile");
+            auto entity = m_entityManager.addEntity(animation_name);                    // Diffrentiate between floor and brick
             entity->addComponent<CTransform>(Vec2(x, y));
             entity->addComponent<CAnimation>(m_game.getAssets().getAnimation(animation_name), true);
+            entity->addComponent<CBoundingBox>(m_game.getAssets().getAnimation(animation_name).getSize());
         }
         else if (word == "Player")
         {
@@ -84,7 +65,7 @@ void GameState_Play::spawnPlayer()
 {
     // here is a sample player entity which you can use to construct other entities
     m_player = m_entityManager.addEntity("player");
-    m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, m_playerConfig.Y));
+    m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, 40));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Stand"), true);
     m_player->addComponent<CInput>();
@@ -178,6 +159,18 @@ void GameState_Play::sCollision()
     //       used by the Animation system
     // TODO: Check to see if the player has fallen down a hole (y < 0)
     // TODO: Don't let the player walk off the left side of the map
+    static int i = 0;
+
+    for (auto const &f : m_entityManager.getEntities("Brick"))
+    {
+
+        Vec2 value = Physics::GetOverlap(m_player, f);
+        if (value.x != 0 || value.y != 0)
+        {
+            std::cout << "Collision Happening " << i << "In x direction:" << value.x << " In Y direction" << value.y << std::endl;
+        }
+    }
+    i++;
 }
 
 void GameState_Play::sUserInput()
