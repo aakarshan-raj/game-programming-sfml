@@ -46,7 +46,7 @@ void GameState_Play::loadLevel(const std::string &filename)
         else if (word == "Tile")
         {
             file >> animation_name >> x >> y;
-            auto entity = m_entityManager.addEntity(animation_name);                    // Diffrentiate between floor and brick
+            auto entity = m_entityManager.addEntity(animation_name); // Diffrentiate between floor and brick
             entity->addComponent<CTransform>(Vec2(x, y));
             entity->addComponent<CAnimation>(m_game.getAssets().getAnimation(animation_name), true);
             entity->addComponent<CBoundingBox>(m_game.getAssets().getAnimation(animation_name).getSize());
@@ -159,18 +159,20 @@ void GameState_Play::sCollision()
     //       used by the Animation system
     // TODO: Check to see if the player has fallen down a hole (y < 0)
     // TODO: Don't let the player walk off the left side of the map
-    static int i = 0;
 
-    for (auto const &f : m_entityManager.getEntities("Brick"))
+    for (auto const &f : m_entityManager.getEntities("bullet"))
     {
-
-        Vec2 value = Physics::GetOverlap(m_player, f);
-        if (value.x != 0 || value.y != 0)
+        for (auto const &e : m_entityManager.getEntities("Brick"))
         {
-            std::cout << "Collision Happening " << i << "In x direction:" << value.x << " In Y direction" << value.y << std::endl;
+            Vec2 value = Physics::GetOverlap(e, f);
+            if (value.x != 0 || value.y != 0)
+            {
+                e->addComponent<CLifeSpan>(7);
+                std::cout << "Collision Happening " << value.x << ": " << value.y << std::endl;
+                f->destroy();
+            }
         }
     }
-    i++;
 }
 
 void GameState_Play::sUserInput()
@@ -296,7 +298,8 @@ void GameState_Play::sAnimation()
             m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Run");
         }
     }
-    for (auto &e : m_entityManager.getEntities())
+
+    for (auto &e : m_entityManager.getEntities("Brick"))
     {
         if (e->hasComponent<CLifeSpan>())
         {
@@ -305,6 +308,13 @@ void GameState_Play::sAnimation()
                 e->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Explosion");
             }
         }
+
+        e->getComponent<CAnimation>()->animation.update();
+    }
+
+    for (auto &e : m_entityManager.getEntities())
+    {
+
         e->getComponent<CAnimation>()->animation.update();
     }
 }
