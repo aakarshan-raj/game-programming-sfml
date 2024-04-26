@@ -1,5 +1,5 @@
 Texture   TexStand   images/megaman/stand64.png              
-Texture   TexRun     images/megaman/run64.png                
+Texture   TexRun     images/misc/catsheet.png                
 Texture   TexAir     images/megaman/air64.png                
 Texture   TexBuster  images/megaman/buster.png
 Texture   TexExplode images/misc/explosion128.png
@@ -18,10 +18,12 @@ Texture   TexBlock   images/mario/block.png
 Texture   TexPole    images/mario/flagpole.png
 Texture   TexPoleTop images/mario/flagtop.png
 Texture   TexFlag    images/mario/flag.png
-Texture   Cat        images/misc/cat.png
-Animation Acat       Cat    1    0   
+Texture   TCat       images/misc/cat.png
+Texture   TCatRun    images/misc/catsheet.png
+Animation AcatRun    TCatRun     4    10   
+Animation Acat       TCat        1    0   
 Animation Stand      TexStand    1    0   
-Animation Run        TexRun      3   10    
+Animation Run        TexRun      4   10    
 Animation Air        TexAir      1    0  
 Animation Buster     TexBuster   1    0   
 Animation Explosion  TexExplode 48    2   

@@ -67,7 +67,7 @@ void GameState_Play::spawnPlayer()
     m_player = m_entityManager.addEntity("player");
     m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, 40));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY));
-    m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Stand"), true);
+    m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Acat"), true);
     m_player->addComponent<CInput>();
     m_player->addComponent<CState>("stand");
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
@@ -287,11 +287,11 @@ void GameState_Play::sAnimation()
     {
         if (m_player->getComponent<CState>()->state == "Stand")
         {
-            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Stand");
+            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Acat");
         }
         else if (m_player->getComponent<CState>()->state == "Air")
         {
-            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Air");
+            m_player->getComponent<CAnimation>()->animation = m_game.getAssets().getAnimation("Acat");
         }
         else if (m_player->getComponent<CState>()->state == "Run")
         {
