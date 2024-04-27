@@ -65,7 +65,7 @@ void GameState_Play::spawnPlayer()
 {
     // here is a sample player entity which you can use to construct other entities
     m_player = m_entityManager.addEntity("player");
-    m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, 40));
+    m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, m_playerConfig.Y));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Stand"), true);
     m_player->addComponent<CInput>();
@@ -114,17 +114,29 @@ void GameState_Play::sMovement()
     // TODO: Implement player movement / jumping based on its CInput component
     // TODO: Implement gravity's effect on the player
     // TODO: Implement the maxmimum player speed in both X and Y directions
+
     if (m_player->getComponent<CInput>()->up == true)
     {
+        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
         m_player->getComponent<CTransform>()->pos.y += m_playerConfig.JUMP;
     }
     else if (m_player->getComponent<CInput>()->left == true)
     {
+        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
+
         m_player->getComponent<CTransform>()->pos.x -= m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->right == true)
     {
+        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
+
         m_player->getComponent<CTransform>()->pos.x += m_playerConfig.SPEED;
+    }
+    else if (m_player->getComponent<CInput>()->down == true)
+    {
+        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
+
+        m_player->getComponent<CTransform>()->pos.y -= m_playerConfig.SPEED;
     }
 }
 
@@ -168,9 +180,18 @@ void GameState_Play::sCollision()
             if (value.x != 0 || value.y != 0)
             {
                 e->addComponent<CLifeSpan>(7);
-                std::cout << "Collision Happening " << value.x << ": " << value.y << std::endl;
                 f->destroy();
             }
+        }
+    }
+    for (auto const &e : m_entityManager.getEntities("Ground"))
+    {
+        Vec2 value = Physics::GetOverlap(e, m_player);
+        if (value.y > 0)
+        {
+            std::cout << "Y direction colision:"<<value.y << std::endl;
+            m_player->getComponent<CTransform>()->pos.y = 
+            m_player->getComponent<CTransform>()->prevPos.y + value.y; // New position: current_position+overlap_in_y_direction
         }
     }
 }
@@ -236,6 +257,13 @@ void GameState_Play::sUserInput()
                 m_player->getComponent<CTransform>()->scale = {1, 1};
                 break;
             }
+            case sf::Keyboard::S:
+            {
+                m_player->getComponent<CInput>()->down = true;
+                m_player->getComponent<CState>()->state = "Run";
+                m_player->getComponent<CTransform>()->scale = {1, 1};
+                break;
+            }
             case sf::Keyboard::Space:
             {
                 spawnBullet(m_player);
@@ -267,6 +295,12 @@ void GameState_Play::sUserInput()
             case sf::Keyboard::D:
             {
                 m_player->getComponent<CInput>()->right = false;
+                m_player->getComponent<CState>()->state = "Stand";
+                break;
+            }
+            case sf::Keyboard::S:
+            {
+                m_player->getComponent<CInput>()->down = false;
                 m_player->getComponent<CState>()->state = "Stand";
                 break;
             }
