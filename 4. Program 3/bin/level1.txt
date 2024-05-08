@@ -20,6 +20,7 @@ Dec  CloudBig 1416 450
 Dec  CloudSmall 1800 600
 Dec  CloudSmall 2000 400
 Tile Ground 32 32
+Tile Ground 160 96
 Tile Ground 96 32
 Tile Ground 160 32
 Tile Ground 224 32

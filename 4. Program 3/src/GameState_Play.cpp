@@ -22,12 +22,9 @@ void GameState_Play::init(const std::string &levelPath)
 
 void GameState_Play::loadLevel(const std::string &filename)
 {
-    // reset the entity manager every time we load a level
     m_entityManager = EntityManager();
 
-    // TODO: read in the level file and add the appropriate entities
-    //       use the PlayerConfig struct m_playerConfig to store player properties
-    //       this struct is defined at the top of GameState_Play.h
+ 
     std::ifstream file;
     file.open(filename);
     std::string word;
@@ -71,13 +68,12 @@ void GameState_Play::spawnPlayer()
     m_player->addComponent<CInput>();
     m_player->addComponent<CState>("stand");
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
+    m_player->getComponent<CTransform>()->speed.y = m_playerConfig.GRAVITY;
 
-    // TODO: be sure to add the remaining components to the player
 }
 
 void GameState_Play::spawnBullet(std::shared_ptr<Entity> entity)
 {
-    // TODO: this should spawn a bullet at the given entity, going in the direction the entity is facing
     auto bullet = m_entityManager.addEntity("bullet");
     float direction = 11.0f;
     if (m_player->getComponent<CTransform>()->scale.x < 0)
@@ -99,8 +95,6 @@ void GameState_Play::update()
 {
     m_entityManager.update();
 
-    // TODO: implement pause functionality
-
     sMovement();
     sLifespan();
     sCollision();
@@ -111,38 +105,35 @@ void GameState_Play::update()
 
 void GameState_Play::sMovement()
 {
-    // TODO: Implement player movement / jumping based on its CInput component
-    // TODO: Implement gravity's effect on the player
-    // TODO: Implement the maxmimum player speed in both X and Y directions
+ 
 
     if (m_player->getComponent<CInput>()->up == true)
     {
-        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
         m_player->getComponent<CTransform>()->pos.y += m_playerConfig.JUMP;
     }
     else if (m_player->getComponent<CInput>()->left == true)
     {
-        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
-
         m_player->getComponent<CTransform>()->pos.x -= m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->right == true)
     {
-        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
-
         m_player->getComponent<CTransform>()->pos.x += m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->down == true)
     {
-        m_player->getComponent<CTransform>()->prevPos = m_player->getComponent<CTransform>()->pos;
-
         m_player->getComponent<CTransform>()->pos.y -= m_playerConfig.SPEED;
+    }
+
+    // m_player->getComponent<CTransform>()->pos.y -= 9.8;
+    for (auto &x : m_entityManager.getEntities())
+    {
+        x->getComponent<CTransform>()->prevPos = x->getComponent<CTransform>()->pos;
+        x->getComponent<CTransform>()->pos += x->getComponent<CTransform>()->speed;
     }
 }
 
 void GameState_Play::sLifespan()
 {
-    // TODO: Check lifespawn of entities that have them, and destroy them if they go over
     for (auto &e : m_entityManager.getEntities())
     {
         if (e->hasComponent<CLifeSpan>())
@@ -161,16 +152,7 @@ void GameState_Play::sLifespan()
 
 void GameState_Play::sCollision()
 {
-    // TODO: Implement Physics::GetOverlap() function, use it inside this function
-
-    // TODO: Implement bullet / tile collisions
-    //       Destroy the tile if it has a Brick animation
-    // TODO: Implement player / tile collisions and resolutions
-    //       Update the CState component of the player to store whether
-    //       it is currently on the ground or in the air. This will be
-    //       used by the Animation system
-    // TODO: Check to see if the player has fallen down a hole (y < 0)
-    // TODO: Don't let the player walk off the left side of the map
+ 
 
     for (auto const &f : m_entityManager.getEntities("bullet"))
     {
@@ -189,16 +171,15 @@ void GameState_Play::sCollision()
         Vec2 value = Physics::GetOverlap(e, m_player);
         if (value.y > 0)
         {
-            std::cout << "Y direction colision:"<<value.y << std::endl;
-            m_player->getComponent<CTransform>()->pos.y = 
-            m_player->getComponent<CTransform>()->prevPos.y + value.y; // New position: current_position+overlap_in_y_direction
+            std::cout << "Y direction colision:" << value.y << std::endl;
+            m_player->getComponent<CTransform>()->pos.y =
+                m_player->getComponent<CTransform>()->prevPos.y + value.y; // New position: current_position+overlap_in_y_direction
         }
     }
 }
 
 void GameState_Play::sUserInput()
 {
-    // TODO: implement the rest of the player input
 
     sf::Event event;
     while (m_game.window().pollEvent(event))
@@ -311,9 +292,7 @@ void GameState_Play::sUserInput()
 
 void GameState_Play::sAnimation()
 {
-    // TODO: set the animation of the player based on its CState component
-    // TODO: for each entity with an animation, call entity->getComponent<CAnimation>()->animation.update()
-    //       if the animation is not repeated, and it has ended, destroy the entity
+    
     if (m_player->getComponent<CState>()->state == m_player->getComponent<CAnimation>()->animation.getName())
     {
     }
@@ -379,9 +358,9 @@ void GameState_Play::sRender()
         for (auto e : m_entityManager.getEntities())
         {
             auto transform = e->getComponent<CTransform>();
-
-            transform->pos.x = transform->pos.x + transform->speed.x;
-            transform->pos.y = transform->pos.y + transform->speed.y;
+            // transform->prevPos = transform->pos;
+            // transform->pos.x = transform->pos.x + transform->speed.x;
+            // transform->pos.y = transform->pos.y + transform->speed.y;
 
             if (e->hasComponent<CAnimation>())
             {
