@@ -173,4 +173,4 @@ Tile Ground 6176 32
 Tile Ground 6240 32
 Tile Ground 6304 32
 Tile Ground 6368 32
-Player 128 400 48 48 5 20 20 -0.75 Buster
+Player 128 400 48 48 5 20 20 -5 Buster

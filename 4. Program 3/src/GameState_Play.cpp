@@ -121,15 +121,15 @@ void GameState_Play::sMovement()
     }
     else if (m_player->getComponent<CInput>()->down == true)
     {
-        m_player->getComponent<CTransform>()->pos.y -= m_playerConfig.SPEED;
+        m_player->getComponent<CTransform>()->pos.y -= 1;
     }
 
     // m_player->getComponent<CTransform>()->pos.y -= 9.8;
-    for (auto &x : m_entityManager.getEntities())
-    {
-        x->getComponent<CTransform>()->prevPos = x->getComponent<CTransform>()->pos;
-        x->getComponent<CTransform>()->pos += x->getComponent<CTransform>()->speed;
-    }
+    // for (auto &x : m_entityManager.getEntities())
+    // {
+    //     x->getComponent<CTransform>()->prevPos = x->getComponent<CTransform>()->pos;
+    //     x->getComponent<CTransform>()->pos += x->getComponent<CTransform>()->speed;
+    // }
 }
 
 void GameState_Play::sLifespan()
