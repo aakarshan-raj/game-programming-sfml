@@ -34,7 +34,7 @@ int main()
     rect1.setOrigin(sf::Vector2f(SHAPE_ONE_WIDTH / 2, SHAPE_ONE_HEIGHT / 2));
     rect1.setPosition(SHAPE_ONE_POSITION_X, SHAPE_ONE_POSITION_Y);
     rect1.setFillColor(sf::Color(0, 0, 0, 0));
-    rect1.setOutlineColor(sf::Color(255, 255, 255, 255));
+    rect1.setOutlineColor(sf::Color(0, 0, 0, 255));
     rect1.setOutlineThickness(1);
 
     sf::RectangleShape rect2;
@@ -42,7 +42,7 @@ int main()
     rect2.setOrigin(sf::Vector2f(SHAPE_TWO_WIDTH / 2, SHAPE_TWO_HEIGHT / 2));
     rect2.setPosition(SHAPE_TWO_POSITION_X, SHAPE_TWO_POSITION_Y);
     rect2.setFillColor(sf::Color(0, 0, 0, 0));
-    rect2.setOutlineColor(sf::Color(255, 255, 255, 255));
+    rect2.setOutlineColor(sf::Color(0, 0, 0, 255));
     rect2.setOutlineThickness(1);
 
     shape_one.setPosition(SHAPE_ONE_POSITION_X, SHAPE_ONE_POSITION_Y);
@@ -58,6 +58,56 @@ int main()
         {
             if (event.type == sf::Event::Closed)
                 window.close();
+            if (event.type == sf::Event::KeyPressed)
+            {
+
+                if (draw_rect1)
+                {
+                    if (event.key.code == sf::Keyboard::W)
+                    {
+                        shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x, shape_one.getPosition().y - 10));
+                        rect1.setPosition(sf::Vector2f(rect1.getPosition().x, rect1.getPosition().y - 10));
+                    }
+                    if (event.key.code == sf::Keyboard::S)
+                    {
+                        shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x, shape_one.getPosition().y + 10));
+                        rect1.setPosition(sf::Vector2f(rect1.getPosition().x, rect1.getPosition().y + 10));
+                    }
+                    if (event.key.code == sf::Keyboard::A)
+                    {
+                        shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x - 10, shape_one.getPosition().y));
+                        rect1.setPosition(sf::Vector2f(rect1.getPosition().x - 10, rect1.getPosition().y));
+                    }
+                    if (event.key.code == sf::Keyboard::D)
+                    {
+                        shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x + 10, shape_one.getPosition().y));
+                        rect1.setPosition(sf::Vector2f(rect1.getPosition().x + 10, rect1.getPosition().y));
+                    }
+                }
+                else if (draw_rect2)
+                {
+                    if (event.key.code == sf::Keyboard::W)
+                    {
+                        shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x, shape_two.getPosition().y - 10));
+                        rect2.setPosition(sf::Vector2f(rect2.getPosition().x, rect2.getPosition().y - 10));
+                    }
+                    if (event.key.code == sf::Keyboard::S)
+                    {
+                        shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x, shape_two.getPosition().y + 10));
+                        rect2.setPosition(sf::Vector2f(rect2.getPosition().x, rect2.getPosition().y + 10));
+                    }
+                    if (event.key.code == sf::Keyboard::A)
+                    {
+                        shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x - 10, shape_two.getPosition().y));
+                        rect2.setPosition(sf::Vector2f(rect2.getPosition().x - 10, rect2.getPosition().y));
+                    }
+                    if (event.key.code == sf::Keyboard::D)
+                    {
+                        shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x + 10, shape_two.getPosition().y));
+                        rect2.setPosition(sf::Vector2f(rect2.getPosition().x + 10, rect2.getPosition().y));
+                    }
+                }
+            }
             if (event.type == sf::Event::MouseButtonPressed)
             {
                 if (event.mouseButton.button == sf::Mouse::Left)
@@ -105,7 +155,7 @@ int main()
             }
         }
 
-        window.clear();
+        window.clear(sf::Color::White);
 
         window.draw(shape_one);
         window.draw(shape_two);
