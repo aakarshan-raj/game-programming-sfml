@@ -2,7 +2,7 @@
 #include <iostream>
 
 const int WINDOW_HEIGHT = 700;
-const int WINDOW_WIDTH = 700;
+const int WINDOW_WIDTH = 1000;
 
 const int SHAPE_ONE_HEIGHT = 100;
 const int SHAPE_ONE_WIDTH = 100;
@@ -18,7 +18,7 @@ int SHAPE_TWO_POSITION_Y = 300;
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(700, 700), "collision detection");
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "collision detection");
 
     sf::RectangleShape shape_one(sf::Vector2f(SHAPE_ONE_WIDTH, SHAPE_ONE_HEIGHT));
     sf::RectangleShape shape_two(sf::Vector2f(SHAPE_TWO_WIDTH, SHAPE_TWO_HEIGHT));
@@ -51,6 +51,29 @@ int main()
     bool draw_rect1 = false;
     bool draw_rect2 = false;
 
+    sf::Font font;
+    if (!font.loadFromFile("font/Oxygen-Regular.ttf"))
+    {
+        std::cout << "Cant load Fonts" << std::endl;
+    }
+
+    sf::Text shape_one_center_x(std::to_string(SHAPE_ONE_POSITION_X), font, 15);
+    sf::Text shape_one_center_y(std::to_string(SHAPE_ONE_POSITION_Y), font, 15);
+
+    shape_one_center_x.setPosition(sf::Vector2f(SHAPE_ONE_POSITION_X - 25, SHAPE_ONE_POSITION_Y - 10));
+    shape_one_center_y.setPosition(sf::Vector2f(SHAPE_ONE_POSITION_X + 10, SHAPE_ONE_POSITION_Y - 10));
+
+    sf::Text shape_two_center_x(std::to_string(SHAPE_TWO_POSITION_X), font, 15);
+    sf::Text shape_two_center_y(std::to_string(SHAPE_TWO_POSITION_Y), font, 15);
+
+    shape_two_center_x.setPosition(sf::Vector2f(SHAPE_TWO_POSITION_X - 25, SHAPE_TWO_POSITION_Y - 10));
+    shape_two_center_y.setPosition(sf::Vector2f(SHAPE_TWO_POSITION_X + 10, SHAPE_TWO_POSITION_Y - 10));
+
+    shape_one_center_x.setColor(sf::Color::Black);
+    shape_one_center_y.setColor(sf::Color::Black);
+    shape_two_center_x.setColor(sf::Color::Black);
+    shape_two_center_y.setColor(sf::Color::Black);
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -60,29 +83,46 @@ int main()
                 window.close();
             if (event.type == sf::Event::KeyPressed)
             {
-
+                if (event.key.code == sf::Keyboard::Escape)
+                {
+                    window.close();
+                }
                 if (draw_rect1)
                 {
                     if (event.key.code == sf::Keyboard::W)
                     {
                         shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x, shape_one.getPosition().y - 10));
                         rect1.setPosition(sf::Vector2f(rect1.getPosition().x, rect1.getPosition().y - 10));
+
+                        shape_one_center_x.setPosition(sf::Vector2f(shape_one_center_x.getPosition().x, shape_one_center_x.getPosition().y - 10));
+                        shape_one_center_y.setPosition(sf::Vector2f(shape_one_center_y.getPosition().x, shape_one_center_y.getPosition().y - 10));
                     }
                     if (event.key.code == sf::Keyboard::S)
                     {
                         shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x, shape_one.getPosition().y + 10));
                         rect1.setPosition(sf::Vector2f(rect1.getPosition().x, rect1.getPosition().y + 10));
+
+                        shape_one_center_x.setPosition(sf::Vector2f(shape_one_center_x.getPosition().x, shape_one_center_x.getPosition().y + 10));
+                        shape_one_center_y.setPosition(sf::Vector2f(shape_one_center_y.getPosition().x, shape_one_center_y.getPosition().y + 10));
                     }
                     if (event.key.code == sf::Keyboard::A)
                     {
                         shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x - 10, shape_one.getPosition().y));
                         rect1.setPosition(sf::Vector2f(rect1.getPosition().x - 10, rect1.getPosition().y));
+
+                        shape_one_center_x.setPosition(sf::Vector2f(shape_one_center_x.getPosition().x - 10, shape_one_center_x.getPosition().y));
+                        shape_one_center_y.setPosition(sf::Vector2f(shape_one_center_y.getPosition().x - 10, shape_one_center_y.getPosition().y));
                     }
                     if (event.key.code == sf::Keyboard::D)
                     {
                         shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x + 10, shape_one.getPosition().y));
                         rect1.setPosition(sf::Vector2f(rect1.getPosition().x + 10, rect1.getPosition().y));
+
+                        shape_one_center_x.setPosition(sf::Vector2f(shape_one_center_x.getPosition().x + 10, shape_one_center_x.getPosition().y));
+                        shape_one_center_y.setPosition(sf::Vector2f(shape_one_center_y.getPosition().x + 10, shape_one_center_y.getPosition().y));
                     }
+                    shape_one_center_x.setString(std::to_string((int)shape_one.getPosition().x));
+                    shape_one_center_y.setString(std::to_string((int)shape_one.getPosition().y));
                 }
                 else if (draw_rect2)
                 {
@@ -90,22 +130,36 @@ int main()
                     {
                         shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x, shape_two.getPosition().y - 10));
                         rect2.setPosition(sf::Vector2f(rect2.getPosition().x, rect2.getPosition().y - 10));
+
+                        shape_two_center_x.setPosition(sf::Vector2f(shape_two_center_x.getPosition().x, shape_two_center_x.getPosition().y - 10));
+                        shape_two_center_y.setPosition(sf::Vector2f(shape_two_center_y.getPosition().x, shape_two_center_y.getPosition().y - 10));
                     }
                     if (event.key.code == sf::Keyboard::S)
                     {
                         shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x, shape_two.getPosition().y + 10));
                         rect2.setPosition(sf::Vector2f(rect2.getPosition().x, rect2.getPosition().y + 10));
+
+                        shape_two_center_x.setPosition(sf::Vector2f(shape_two_center_x.getPosition().x, shape_two_center_x.getPosition().y + 10));
+                        shape_two_center_y.setPosition(sf::Vector2f(shape_two_center_y.getPosition().x, shape_two_center_y.getPosition().y + 10));
                     }
                     if (event.key.code == sf::Keyboard::A)
                     {
                         shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x - 10, shape_two.getPosition().y));
                         rect2.setPosition(sf::Vector2f(rect2.getPosition().x - 10, rect2.getPosition().y));
+
+                        shape_two_center_x.setPosition(sf::Vector2f(shape_two_center_x.getPosition().x - 10, shape_two_center_x.getPosition().y));
+                        shape_two_center_y.setPosition(sf::Vector2f(shape_two_center_y.getPosition().x - 10, shape_two_center_y.getPosition().y));
                     }
                     if (event.key.code == sf::Keyboard::D)
                     {
                         shape_two.setPosition(sf::Vector2f(shape_two.getPosition().x + 10, shape_two.getPosition().y));
                         rect2.setPosition(sf::Vector2f(rect2.getPosition().x + 10, rect2.getPosition().y));
+
+                        shape_two_center_x.setPosition(sf::Vector2f(shape_two_center_x.getPosition().x + 10, shape_two_center_x.getPosition().y));
+                        shape_two_center_y.setPosition(sf::Vector2f(shape_two_center_y.getPosition().x + 10, shape_two_center_y.getPosition().y));
                     }
+                    shape_two_center_x.setString(std::to_string((int)shape_two.getPosition().x));
+                    shape_two_center_y.setString(std::to_string((int)shape_two.getPosition().y));
                 }
             }
             if (event.type == sf::Event::MouseButtonPressed)
@@ -159,6 +213,13 @@ int main()
 
         window.draw(shape_one);
         window.draw(shape_two);
+
+        // Rendering texts
+        window.draw(shape_one_center_x);
+        window.draw(shape_one_center_y);
+        window.draw(shape_two_center_x);
+        window.draw(shape_two_center_y);
+
         if (draw_rect1)
             window.draw(rect1);
 
