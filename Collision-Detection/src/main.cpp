@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #include <cmath>
 #include <map>
@@ -47,6 +48,16 @@ int main()
     {
         std::cout << "Cant load Fonts" << std::endl;
     }
+
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile("sound/ping.wav"))
+    {
+        std::cout << "Error loading mp3" << std::endl;
+    }
+
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+
     sf::RectangleShape shape_one(sf::Vector2f(SHAPE_ONE_WIDTH, SHAPE_ONE_HEIGHT));
     sf::RectangleShape shape_two(sf::Vector2f(SHAPE_TWO_WIDTH, SHAPE_TWO_HEIGHT));
 
@@ -112,11 +123,33 @@ int main()
     collision_status_text_area.setPosition(sf::Vector2f(WINDOW_WIDTH - 70, 130));
     collision_status_text_area.setColor(sf::Color::Red);
 
+    sf::RectangleShape line1;
+    line1.setSize(sf::Vector2f(200, 1));
+    line1.setPosition(WINDOW_WIDTH - 200, 30);
+    line1.setOutlineColor(sf::Color::Blue);
+
+    sf::RectangleShape line2;
+    line2.setSize(sf::Vector2f(200, 1));
+    line2.setPosition(WINDOW_WIDTH - 200, 70);
+    line2.setOutlineColor(sf::Color::Blue);
+
+    sf::RectangleShape line3;
+    line3.setSize(sf::Vector2f(200, 1));
+    line3.setPosition(WINDOW_WIDTH - 200, 110);
+    line3.setOutlineColor(sf::Color::Blue);
+
+    sf::RectangleShape line4;
+    line4.setSize(sf::Vector2f(200, 1));
+    line4.setPosition(WINDOW_WIDTH - 200, 150);
+    line4.setOutlineColor(sf::Color::Blue);
+
     shape_one.setPosition(SHAPE_ONE_POSITION_X, SHAPE_ONE_POSITION_Y);
     shape_two.setPosition(SHAPE_TWO_POSITION_X, SHAPE_TWO_POSITION_Y);
 
     bool draw_rect1 = false;
     bool draw_rect2 = false;
+
+    bool play_ping = false;
 
     sf::Text shape_one_center_x(std::to_string(SHAPE_ONE_POSITION_X), font, 15);
     sf::Text shape_one_center_y(std::to_string(SHAPE_ONE_POSITION_Y), font, 15);
@@ -146,10 +179,12 @@ int main()
             {
                 if (event.key.code == sf::Keyboard::Escape)
                 {
+
                     window.close();
                 }
                 if (draw_rect1)
                 {
+
                     if (event.key.code == sf::Keyboard::W)
                     {
                         shape_one.setPosition(sf::Vector2f(shape_one.getPosition().x, shape_one.getPosition().y - 10));
@@ -280,6 +315,11 @@ int main()
             collision_status_text_x.setColor(sf::Color::Green);
             if (check_collision.second > 0)
             {
+                if (play_ping)
+                    sound.play();
+
+                play_ping = false;
+
                 collision_status_text.setString("True");
                 collision_status_text.setColor(sf::Color::Green);
                 collision_status_text_y.setColor(sf::Color::Green);
@@ -290,6 +330,8 @@ int main()
             }
             else
             {
+                play_ping = true;
+
                 collision_status_text_y.setColor(sf::Color::Red);
                 collision_status_text.setString("False");
                 collision_status_text.setColor(sf::Color::Red);
@@ -302,6 +344,8 @@ int main()
 
         else
         {
+            play_ping = true;
+
             collision_status_text_y.setString("0");
             collision_status_text_x.setString("0");
             collision_status_text_area.setString("0");
@@ -317,13 +361,14 @@ int main()
         window.clear(sf::Color::White);
 
         window.draw(shape_one);
-        window.draw(shape_two);
-
-        // Rendering texts
         window.draw(shape_one_center_x);
         window.draw(shape_one_center_y);
+
+        window.draw(shape_two);
         window.draw(shape_two_center_x);
         window.draw(shape_two_center_y);
+
+        // Rendering texts
 
         window.draw(status);
         window.draw(collision_text);
@@ -342,6 +387,13 @@ int main()
 
         if (draw_rect2)
             window.draw(rect2);
+
+        // Drawing lines
+        window.draw(line1);
+        window.draw(line2);
+        window.draw(line3);
+        window.draw(line4);
+
         window.display();
     }
 
