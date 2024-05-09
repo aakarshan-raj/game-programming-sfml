@@ -16,10 +16,29 @@ int SHAPE_ONE_POSITION_Y = 100;
 int SHAPE_TWO_POSITION_X = 500;
 int SHAPE_TWO_POSITION_Y = 300;
 
+bool detect_collision(sf::RectangleShape *shape_one, sf::RectangleShape *shape_two)
+{
+    bool vertical_collision = (shape_one->getPosition().x - (shape_one->getSize().x / 2) < shape_two->getPosition().x + (shape_two->getSize().x / 2) &&
+                               shape_two->getPosition().x - (shape_two->getSize().x / 2) < shape_one->getPosition().x + (shape_one->getSize().x / 2));
+    bool horizontal_collision = (shape_one->getPosition().y - (shape_one->getSize().y / 2) < shape_two->getPosition().y + (shape_two->getSize().y / 2) &&
+                                 shape_two->getPosition().y - (shape_two->getSize().y / 2) < shape_one->getPosition().y + (shape_one->getSize().y / 2));
+
+    if (vertical_collision && horizontal_collision)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "collision detection");
-
+    sf::Font font;
+    if (!font.loadFromFile("font/Oxygen-Regular.ttf"))
+    {
+        std::cout << "Cant load Fonts" << std::endl;
+    }
     sf::RectangleShape shape_one(sf::Vector2f(SHAPE_ONE_WIDTH, SHAPE_ONE_HEIGHT));
     sf::RectangleShape shape_two(sf::Vector2f(SHAPE_TWO_WIDTH, SHAPE_TWO_HEIGHT));
 
@@ -45,17 +64,27 @@ int main()
     rect2.setOutlineColor(sf::Color(0, 0, 0, 255));
     rect2.setOutlineThickness(1);
 
+    // Status
+    bool collision = false;
+    sf::RectangleShape status;
+    status.setSize(sf::Vector2f(200, WINDOW_HEIGHT));
+    status.setPosition(WINDOW_WIDTH - 200, 0);
+    status.setFillColor(sf::Color::Black);
+    status.setOutlineColor(sf::Color(0, 0, 0, 255));
+    status.setOutlineThickness(1);
+    sf::Text collision_text("Collision: ", font, 15);
+    collision_text.setPosition(sf::Vector2f(WINDOW_WIDTH - 190, 10));
+    collision_text.setColor(sf::Color::Red);
+
+    sf::Text collision_status_text("false", font, 15);
+    collision_status_text.setPosition(sf::Vector2f(WINDOW_WIDTH - 120, 10));
+    collision_status_text.setColor(sf::Color::Red);
+
     shape_one.setPosition(SHAPE_ONE_POSITION_X, SHAPE_ONE_POSITION_Y);
     shape_two.setPosition(SHAPE_TWO_POSITION_X, SHAPE_TWO_POSITION_Y);
 
     bool draw_rect1 = false;
     bool draw_rect2 = false;
-
-    sf::Font font;
-    if (!font.loadFromFile("font/Oxygen-Regular.ttf"))
-    {
-        std::cout << "Cant load Fonts" << std::endl;
-    }
 
     sf::Text shape_one_center_x(std::to_string(SHAPE_ONE_POSITION_X), font, 15);
     sf::Text shape_one_center_y(std::to_string(SHAPE_ONE_POSITION_Y), font, 15);
@@ -209,6 +238,21 @@ int main()
             }
         }
 
+        // Collision Detection
+
+        if (detect_collision(&shape_one, &shape_two))
+        {
+            std::cout << "COLLISIOn" << std::endl;
+            collision_status_text.setString("True");
+            collision_status_text.setColor(sf::Color::Green);
+        }
+        else
+        {
+            std::cout << " NO COLLISIOn" << std::endl;
+            collision_status_text.setString("False");
+            collision_status_text.setColor(sf::Color::Red);
+        }
+
         window.clear(sf::Color::White);
 
         window.draw(shape_one);
@@ -219,6 +263,10 @@ int main()
         window.draw(shape_one_center_y);
         window.draw(shape_two_center_x);
         window.draw(shape_two_center_y);
+
+        window.draw(status);
+        window.draw(collision_text);
+        window.draw(collision_status_text);
 
         if (draw_rect1)
             window.draw(rect1);
