@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <cmath>
+#include <map>
 
 const int WINDOW_HEIGHT = 700;
 const int WINDOW_WIDTH = 1000;
@@ -16,19 +18,25 @@ int SHAPE_ONE_POSITION_Y = 100;
 int SHAPE_TWO_POSITION_X = 500;
 int SHAPE_TWO_POSITION_Y = 300;
 
-bool detect_collision(sf::RectangleShape *shape_one, sf::RectangleShape *shape_two)
+std::pair<float, float> detect_collision(sf::RectangleShape *shape_one, sf::RectangleShape *shape_two)
 {
     bool vertical_collision = (shape_one->getPosition().x - (shape_one->getSize().x / 2) < shape_two->getPosition().x + (shape_two->getSize().x / 2) &&
                                shape_two->getPosition().x - (shape_two->getSize().x / 2) < shape_one->getPosition().x + (shape_one->getSize().x / 2));
     bool horizontal_collision = (shape_one->getPosition().y - (shape_one->getSize().y / 2) < shape_two->getPosition().y + (shape_two->getSize().y / 2) &&
                                  shape_two->getPosition().y - (shape_two->getSize().y / 2) < shape_one->getPosition().y + (shape_one->getSize().y / 2));
 
-    if (vertical_collision && horizontal_collision)
-    {
-        return true;
-    }
+    float dx = abs(shape_one->getPosition().x - shape_two->getPosition().x);
+    float dy = abs(shape_one->getPosition().y - shape_two->getPosition().y);
+    float w1 = shape_one->getSize().x;
+    float w2 = shape_two->getSize().x;
 
-    return false;
+    float h1 = shape_one->getSize().y;
+    float h2 = shape_two->getSize().y;
+
+    float ox = (w1 / 2) + (w2 / 2) - dx;
+    float oy = (h1 / 2) + (h2 / 2) - dy;
+
+    return std::make_pair(ox, oy);
 }
 
 int main()
@@ -76,9 +84,33 @@ int main()
     collision_text.setPosition(sf::Vector2f(WINDOW_WIDTH - 190, 10));
     collision_text.setColor(sf::Color::Red);
 
+    sf::Text collision_text_x("Collision in x direction: ", font, 15);
+    collision_text_x.setPosition(sf::Vector2f(WINDOW_WIDTH - 190, 50));
+    collision_text_x.setColor(sf::Color::Red);
+
+    sf::Text collision_text_y("Collision in y direction: ", font, 15);
+    collision_text_y.setPosition(sf::Vector2f(WINDOW_WIDTH - 190, 90));
+    collision_text_y.setColor(sf::Color::Red);
+
+    sf::Text collision_text_area("Area of collision: ", font, 15);
+    collision_text_area.setPosition(sf::Vector2f(WINDOW_WIDTH - 190, 130));
+    collision_text_area.setColor(sf::Color::Red);
+
     sf::Text collision_status_text("false", font, 15);
     collision_status_text.setPosition(sf::Vector2f(WINDOW_WIDTH - 120, 10));
     collision_status_text.setColor(sf::Color::Red);
+
+    sf::Text collision_status_text_x("0", font, 15);
+    collision_status_text_x.setPosition(sf::Vector2f(WINDOW_WIDTH - 40, 50));
+    collision_status_text_x.setColor(sf::Color::Red);
+
+    sf::Text collision_status_text_y("0", font, 15);
+    collision_status_text_y.setPosition(sf::Vector2f(WINDOW_WIDTH - 40, 90));
+    collision_status_text_y.setColor(sf::Color::Red);
+
+    sf::Text collision_status_text_area("0", font, 15);
+    collision_status_text_area.setPosition(sf::Vector2f(WINDOW_WIDTH - 70, 130));
+    collision_status_text_area.setColor(sf::Color::Red);
 
     shape_one.setPosition(SHAPE_ONE_POSITION_X, SHAPE_ONE_POSITION_Y);
     shape_two.setPosition(SHAPE_TWO_POSITION_X, SHAPE_TWO_POSITION_Y);
@@ -240,15 +272,44 @@ int main()
 
         // Collision Detection
 
-        if (detect_collision(&shape_one, &shape_two))
+        std::pair<float, float> check_collision = detect_collision(&shape_one, &shape_two);
+
+        if (check_collision.first > 0)
         {
-            std::cout << "COLLISIOn" << std::endl;
-            collision_status_text.setString("True");
-            collision_status_text.setColor(sf::Color::Green);
+            collision_status_text_x.setString(std::to_string((int)check_collision.first));
+            collision_status_text_x.setColor(sf::Color::Green);
+            if (check_collision.second > 0)
+            {
+                collision_status_text.setString("True");
+                collision_status_text.setColor(sf::Color::Green);
+                collision_status_text_y.setColor(sf::Color::Green);
+                collision_status_text_y.setString(std::to_string((int)check_collision.second));
+
+                collision_status_text_area.setColor(sf::Color::Green);
+                collision_status_text_area.setString(std::to_string((int)(check_collision.first * check_collision.second)));
+            }
+            else
+            {
+                collision_status_text_y.setColor(sf::Color::Red);
+                collision_status_text.setString("False");
+                collision_status_text.setColor(sf::Color::Red);
+                collision_status_text_y.setString("0");
+
+                collision_status_text_area.setColor(sf::Color::Red);
+                collision_status_text_area.setString("0");
+            }
         }
+
         else
         {
-            std::cout << " NO COLLISIOn" << std::endl;
+            collision_status_text_y.setString("0");
+            collision_status_text_x.setString("0");
+            collision_status_text_area.setString("0");
+
+            collision_status_text_area.setColor(sf::Color::Red);
+            collision_status_text_x.setColor(sf::Color::Red);
+            collision_status_text_y.setColor(sf::Color::Red);
+
             collision_status_text.setString("False");
             collision_status_text.setColor(sf::Color::Red);
         }
@@ -267,6 +328,14 @@ int main()
         window.draw(status);
         window.draw(collision_text);
         window.draw(collision_status_text);
+
+        window.draw(collision_text_x);
+        window.draw(collision_text_y);
+        window.draw(collision_text_area);
+
+        window.draw(collision_status_text_x);
+        window.draw(collision_status_text_y);
+        window.draw(collision_status_text_area);
 
         if (draw_rect1)
             window.draw(rect1);
