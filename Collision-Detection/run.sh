@@ -1,3 +1,0 @@
-make
-cd bin
-./sfml
