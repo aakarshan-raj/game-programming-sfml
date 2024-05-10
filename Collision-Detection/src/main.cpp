@@ -64,8 +64,8 @@ int main()
     shape_one.setOrigin(SHAPE_ONE_WIDTH / 2, SHAPE_ONE_HEIGHT / 2);
     shape_two.setOrigin(SHAPE_TWO_WIDTH / 2, SHAPE_TWO_HEIGHT / 2);
 
-    shape_one.setFillColor(sf::Color::Green);
-    shape_two.setFillColor(sf::Color::Red);
+    shape_one.setFillColor(sf::Color(78, 245, 103));
+    shape_two.setFillColor(sf::Color(247, 62, 62));
 
     sf::RectangleShape rect1;
     rect1.setSize(sf::Vector2f(SHAPE_ONE_WIDTH, SHAPE_ONE_HEIGHT));
@@ -88,7 +88,7 @@ int main()
     sf::RectangleShape status;
     status.setSize(sf::Vector2f(200, WINDOW_HEIGHT));
     status.setPosition(WINDOW_WIDTH - 200, 0);
-    status.setFillColor(sf::Color::Black);
+    status.setFillColor(sf::Color(3, 3, 3));
     status.setOutlineColor(sf::Color(0, 0, 0, 255));
     status.setOutlineThickness(1);
     sf::Text collision_text("Collision: ", font, 15);
@@ -122,6 +122,10 @@ int main()
     sf::Text collision_status_text_area("0", font, 15);
     collision_status_text_area.setPosition(sf::Vector2f(WINDOW_WIDTH - 70, 130));
     collision_status_text_area.setColor(sf::Color::Red);
+
+    sf::Text author("By: Aakarshan Raj", font, 15);
+    author.setPosition(sf::Vector2f(WINDOW_WIDTH - 195, WINDOW_HEIGHT-20));
+    author.setColor(sf::Color::Red);
 
     sf::RectangleShape line1;
     line1.setSize(sf::Vector2f(200, 1));
@@ -358,7 +362,7 @@ int main()
             collision_status_text.setColor(sf::Color::Red);
         }
 
-        window.clear(sf::Color::White);
+        window.clear(sf::Color(156, 180, 219));
 
         window.draw(shape_one);
         window.draw(shape_one_center_x);
@@ -381,6 +385,7 @@ int main()
         window.draw(collision_status_text_x);
         window.draw(collision_status_text_y);
         window.draw(collision_status_text_area);
+        window.draw(author);
 
         if (draw_rect1)
             window.draw(rect1);
