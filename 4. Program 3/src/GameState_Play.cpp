@@ -24,7 +24,6 @@ void GameState_Play::loadLevel(const std::string &filename)
 {
     m_entityManager = EntityManager();
 
- 
     std::ifstream file;
     file.open(filename);
     std::string word;
@@ -63,13 +62,13 @@ void GameState_Play::spawnPlayer()
     // here is a sample player entity which you can use to construct other entities
     m_player = m_entityManager.addEntity("player");
     m_player->addComponent<CTransform>(Vec2(m_playerConfig.X, m_playerConfig.Y));
+    m_player->getComponent<CTransform>()->prevPos = {m_playerConfig.X, m_playerConfig.Y};
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CAnimation>(m_game.getAssets().getAnimation("Stand"), true);
     m_player->addComponent<CInput>();
     m_player->addComponent<CState>("stand");
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
     m_player->getComponent<CTransform>()->speed.y = m_playerConfig.GRAVITY;
-
 }
 
 void GameState_Play::spawnBullet(std::shared_ptr<Entity> entity)
@@ -105,26 +104,30 @@ void GameState_Play::update()
 
 void GameState_Play::sMovement()
 {
- 
 
     if (m_player->getComponent<CInput>()->up == true)
     {
+        m_player->getComponent<CTransform>()->prevPos.y = m_player->getComponent<CTransform>()->pos.y;
         m_player->getComponent<CTransform>()->pos.y += m_playerConfig.JUMP;
     }
     else if (m_player->getComponent<CInput>()->left == true)
     {
+        m_player->getComponent<CTransform>()->prevPos.x = m_player->getComponent<CTransform>()->pos.x;
         m_player->getComponent<CTransform>()->pos.x -= m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->right == true)
     {
+        m_player->getComponent<CTransform>()->prevPos.x = m_player->getComponent<CTransform>()->pos.x;
         m_player->getComponent<CTransform>()->pos.x += m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->down == true)
     {
-        m_player->getComponent<CTransform>()->pos.y -= 1;
+        m_player->getComponent<CTransform>()->prevPos.y = m_player->getComponent<CTransform>()->pos.y;
+        m_player->getComponent<CTransform>()->pos.y -= 2;
     }
+    m_player->getComponent<CTransform>()->prevPos.y = m_player->getComponent<CTransform>()->pos.y;
 
-    // m_player->getComponent<CTransform>()->pos.y -= 9.8;
+    m_player->getComponent<CTransform>()->pos.y += -10;
     // for (auto &x : m_entityManager.getEntities())
     // {
     //     x->getComponent<CTransform>()->prevPos = x->getComponent<CTransform>()->pos;
@@ -152,28 +155,48 @@ void GameState_Play::sLifespan()
 
 void GameState_Play::sCollision()
 {
- 
 
     for (auto const &f : m_entityManager.getEntities("bullet"))
     {
         for (auto const &e : m_entityManager.getEntities("Brick"))
         {
             Vec2 value = Physics::GetOverlap(e, f);
-            if (value.x != 0 || value.y != 0)
+            if (value.x > 0 && value.y > 0)
             {
                 e->addComponent<CLifeSpan>(7);
                 f->destroy();
             }
         }
     }
+
     for (auto const &e : m_entityManager.getEntities("Ground"))
     {
         Vec2 value = Physics::GetOverlap(e, m_player);
-        if (value.y > 0)
+        if (value.y > 0 && value.x > 0)
         {
-            std::cout << "Y direction colision:" << value.y << std::endl;
-            m_player->getComponent<CTransform>()->pos.y =
-                m_player->getComponent<CTransform>()->prevPos.y + value.y; // New position: current_position+overlap_in_y_direction
+            std::cout << "collision happening" << std::endl;
+
+            Vec2 prev_overlap = Physics::GetPrevOverlap(e, m_player);
+
+            if (prev_overlap.x > 0)
+            {
+                std::cout << "from top-down" << std::endl;
+                if (m_player->getComponent<CTransform>()->pos.y > e->getComponent<CTransform>()->pos.y)
+                {
+                    m_player->getComponent<CTransform>()->pos.y += 10;
+                }
+                if (m_player->getComponent<CTransform>()->pos.y < e->getComponent<CTransform>()->pos.y)
+                    m_player->getComponent<CTransform>()->pos.y += 9.8;
+            }
+
+            else if (prev_overlap.y > 0)
+            {
+                std::cout << "from left-right" << std::endl;
+                if (m_player->getComponent<CTransform>()->pos.x < e->getComponent<CTransform>()->pos.x)
+                    m_player->getComponent<CTransform>()->pos.x -= 10;
+                if (m_player->getComponent<CTransform>()->pos.x > e->getComponent<CTransform>()->pos.x)
+                    m_player->getComponent<CTransform>()->pos.x += 10;
+            }
         }
     }
 }
@@ -292,7 +315,7 @@ void GameState_Play::sUserInput()
 
 void GameState_Play::sAnimation()
 {
-    
+
     if (m_player->getComponent<CState>()->state == m_player->getComponent<CAnimation>()->animation.getName())
     {
     }
