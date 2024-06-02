@@ -84,7 +84,7 @@ void GameState_Play::spawnBullet(std::shared_ptr<Entity> entity)
     bullet->addComponent<CTransform>(Vec2(entity->getComponent<CTransform>()->pos.x, entity->getComponent<CTransform>()->pos.y),
                                      Vec2(direction, 0.0f),
                                      Vec2(1.0f, 1.0f),
-                                     0.0f);
+                                     1.0f);
     bullet->addComponent<CLifeSpan>(40);
     bullet->addComponent<CBoundingBox>(Vec2(m_game.getAssets().getAnimation(m_playerConfig.WEAPON).getSize().x,
                                             m_game.getAssets().getAnimation(m_playerConfig.WEAPON).getSize().y));
@@ -93,7 +93,6 @@ void GameState_Play::spawnBullet(std::shared_ptr<Entity> entity)
 void GameState_Play::update()
 {
     m_entityManager.update();
-
     sMovement();
     sLifespan();
     sCollision();
@@ -104,35 +103,47 @@ void GameState_Play::update()
 
 void GameState_Play::sMovement()
 {
+    int moveX = 0;
+    int moveY = 0;
 
     if (m_player->getComponent<CInput>()->up == true)
     {
+        moveY = 18;
         m_player->getComponent<CTransform>()->prevPos.y = m_player->getComponent<CTransform>()->pos.y;
-        m_player->getComponent<CTransform>()->pos.y += m_playerConfig.JUMP;
     }
     else if (m_player->getComponent<CInput>()->left == true)
     {
+        moveX = -m_playerConfig.SPEED;
         m_player->getComponent<CTransform>()->prevPos.x = m_player->getComponent<CTransform>()->pos.x;
-        m_player->getComponent<CTransform>()->pos.x -= m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->right == true)
     {
+        moveX = m_playerConfig.SPEED;
         m_player->getComponent<CTransform>()->prevPos.x = m_player->getComponent<CTransform>()->pos.x;
-        m_player->getComponent<CTransform>()->pos.x += m_playerConfig.SPEED;
     }
     else if (m_player->getComponent<CInput>()->down == true)
     {
+        moveY = -m_playerConfig.JUMP;
         m_player->getComponent<CTransform>()->prevPos.y = m_player->getComponent<CTransform>()->pos.y;
-        m_player->getComponent<CTransform>()->pos.y -= 2;
     }
+
+    m_player->getComponent<CTransform>()->pos += {moveX, moveY};
+
     m_player->getComponent<CTransform>()->prevPos.y = m_player->getComponent<CTransform>()->pos.y;
 
-    m_player->getComponent<CTransform>()->pos.y += -10;
-    // for (auto &x : m_entityManager.getEntities())
-    // {
-    //     x->getComponent<CTransform>()->prevPos = x->getComponent<CTransform>()->pos;
-    //     x->getComponent<CTransform>()->pos += x->getComponent<CTransform>()->speed;
-    // }
+    m_player->getComponent<CTransform>()->pos.y += -8.5; // Gravity
+
+    for (auto &bullet : m_entityManager.getEntities("bullet"))
+    {
+        if (m_player->getComponent<CTransform>()->scale.x == 1)
+        {
+            bullet->getComponent<CTransform>()->pos.x += 20; // Bullet speed
+        }
+        else
+        {
+            bullet->getComponent<CTransform>()->pos.x -= 20; // Bullet speed
+        }
+    }
 }
 
 void GameState_Play::sLifespan()
@@ -174,28 +185,81 @@ void GameState_Play::sCollision()
         Vec2 value = Physics::GetOverlap(e, m_player);
         if (value.y > 0 && value.x > 0)
         {
-            std::cout << "collision happening" << std::endl;
 
             Vec2 prev_overlap = Physics::GetPrevOverlap(e, m_player);
 
             if (prev_overlap.x > 0)
             {
-                std::cout << "from top-down" << std::endl;
                 if (m_player->getComponent<CTransform>()->pos.y > e->getComponent<CTransform>()->pos.y)
                 {
-                    m_player->getComponent<CTransform>()->pos.y += 10;
+                    m_player->getComponent<CTransform>()->pos.y += 8.5;
                 }
-                if (m_player->getComponent<CTransform>()->pos.y < e->getComponent<CTransform>()->pos.y)
-                    m_player->getComponent<CTransform>()->pos.y += 9.8;
+                if (m_player->getComponent<CTransform>()->pos.y < e->getComponent<CTransform>()->pos.y) // shouldnt happend for ground
+                    m_player->getComponent<CTransform>()->pos.y -= 8.5;
             }
 
             else if (prev_overlap.y > 0)
             {
-                std::cout << "from left-right" << std::endl;
                 if (m_player->getComponent<CTransform>()->pos.x < e->getComponent<CTransform>()->pos.x)
-                    m_player->getComponent<CTransform>()->pos.x -= 10;
+                    m_player->getComponent<CTransform>()->pos.x -= 8.5;
                 if (m_player->getComponent<CTransform>()->pos.x > e->getComponent<CTransform>()->pos.x)
-                    m_player->getComponent<CTransform>()->pos.x += 10;
+                    m_player->getComponent<CTransform>()->pos.x += 8.5;
+            }
+        }
+    }
+
+    for (auto const &e : m_entityManager.getEntities("Brick"))
+    {
+        Vec2 value = Physics::GetOverlap(e, m_player);
+        if (value.y > 0 && value.x > 0)
+        {
+
+            Vec2 prev_overlap = Physics::GetPrevOverlap(e, m_player);
+
+            if (prev_overlap.x > 0)
+            {
+                if (m_player->getComponent<CTransform>()->pos.y > e->getComponent<CTransform>()->pos.y)
+                {
+                    m_player->getComponent<CTransform>()->pos.y += 8.5;
+                }
+                if (m_player->getComponent<CTransform>()->pos.y < e->getComponent<CTransform>()->pos.y)
+                    m_player->getComponent<CTransform>()->pos.y -= 8.5;
+            }
+
+            else if (prev_overlap.y > 0)
+            {
+                if (m_player->getComponent<CTransform>()->pos.x < e->getComponent<CTransform>()->pos.x)
+                    m_player->getComponent<CTransform>()->pos.x -= 8.5;
+                if (m_player->getComponent<CTransform>()->pos.x > e->getComponent<CTransform>()->pos.x)
+                    m_player->getComponent<CTransform>()->pos.x += 8.5;
+            }
+        }
+    }
+
+    for (auto const &e : m_entityManager.getEntities("Block"))
+    {
+        Vec2 value = Physics::GetOverlap(e, m_player);
+        if (value.y > 0 && value.x > 0)
+        {
+
+            Vec2 prev_overlap = Physics::GetPrevOverlap(e, m_player);
+
+            if (prev_overlap.x > 0)
+            {
+                if (m_player->getComponent<CTransform>()->pos.y > e->getComponent<CTransform>()->pos.y)
+                {
+                    m_player->getComponent<CTransform>()->pos.y += 8.5;
+                }
+                if (m_player->getComponent<CTransform>()->pos.y < e->getComponent<CTransform>()->pos.y)
+                    m_player->getComponent<CTransform>()->pos.y -= 8.5;
+            }
+
+            else if (prev_overlap.y > 0)
+            {
+                if (m_player->getComponent<CTransform>()->pos.x < e->getComponent<CTransform>()->pos.x)
+                    m_player->getComponent<CTransform>()->pos.x -= 8.5;
+                if (m_player->getComponent<CTransform>()->pos.x > e->getComponent<CTransform>()->pos.x)
+                    m_player->getComponent<CTransform>()->pos.x += 8.5;
             }
         }
     }
@@ -203,6 +267,8 @@ void GameState_Play::sCollision()
 
 void GameState_Play::sUserInput()
 {
+    static bool up_pressed = false;
+    static int loop = 0;
 
     sf::Event event;
     while (m_game.window().pollEvent(event))
@@ -212,67 +278,72 @@ void GameState_Play::sUserInput()
             m_game.quit();
         }
 
-        if (event.type == sf::Event::KeyPressed)
+        if (!up_pressed)
         {
-            switch (event.key.code)
+
+            if (event.type == sf::Event::KeyPressed)
             {
-            case sf::Keyboard::Escape:
-            {
-                m_game.popState();
-                break;
-            }
-            case sf::Keyboard::Z:
-            {
-                init(m_levelPath);
-                break;
-            }
-            case sf::Keyboard::R:
-            {
-                m_drawTextures = !m_drawTextures;
-                break;
-            }
-            case sf::Keyboard::F:
-            {
-                m_drawCollision = !m_drawCollision;
-                break;
-            }
-            case sf::Keyboard::P:
-            {
-                setPaused(!m_paused);
-                break;
-            }
-            case sf::Keyboard::W:
-            {
-                m_player->getComponent<CInput>()->up = true;
-                m_player->getComponent<CState>()->state = "Air";
-                break;
-            }
-            case sf::Keyboard::A:
-            {
-                m_player->getComponent<CInput>()->left = true;
-                m_player->getComponent<CState>()->state = "Run";
-                m_player->getComponent<CTransform>()->scale = {-1.0f, 1};
-                break;
-            }
-            case sf::Keyboard::D:
-            {
-                m_player->getComponent<CInput>()->right = true;
-                m_player->getComponent<CState>()->state = "Run";
-                m_player->getComponent<CTransform>()->scale = {1, 1};
-                break;
-            }
-            case sf::Keyboard::S:
-            {
-                m_player->getComponent<CInput>()->down = true;
-                m_player->getComponent<CState>()->state = "Run";
-                m_player->getComponent<CTransform>()->scale = {1, 1};
-                break;
-            }
-            case sf::Keyboard::Space:
-            {
-                spawnBullet(m_player);
-                break;
-            }
+                switch (event.key.code)
+                {
+                case sf::Keyboard::Escape:
+                {
+                    m_game.popState();
+                    break;
+                }
+                case sf::Keyboard::Z:
+                {
+                    init(m_levelPath);
+                    break;
+                }
+                case sf::Keyboard::R:
+                {
+                    m_drawTextures = !m_drawTextures;
+                    break;
+                }
+                case sf::Keyboard::F:
+                {
+                    m_drawCollision = !m_drawCollision;
+                    break;
+                }
+                case sf::Keyboard::P:
+                {
+                    setPaused(!m_paused);
+                    break;
+                }
+                case sf::Keyboard::W:
+                {
+                    m_player->getComponent<CInput>()->up = true;
+                    m_player->getComponent<CState>()->state = "Air";
+                    up_pressed = true;
+                    break;
+                }
+                case sf::Keyboard::A:
+                {
+                    m_player->getComponent<CInput>()->left = true;
+                    m_player->getComponent<CState>()->state = "Run";
+                    m_player->getComponent<CTransform>()->scale = {-1.0f, 1};
+                    break;
+                }
+                case sf::Keyboard::D:
+                {
+                    m_player->getComponent<CInput>()->right = true;
+                    m_player->getComponent<CState>()->state = "Run";
+                    m_player->getComponent<CTransform>()->scale = {1, 1};
+                    break;
+                }
+                case sf::Keyboard::S:
+                {
+                    m_player->getComponent<CInput>()->down = true;
+                    m_player->getComponent<CState>()->state = "Run";
+                    m_player->getComponent<CTransform>()->scale = {1, 1};
+                    break;
+                }
+                case sf::Keyboard::Space:
+                {
+                    spawnBullet(m_player);
+                    break;
+                }
+                }
             }
         }
 
@@ -309,6 +380,23 @@ void GameState_Play::sUserInput()
                 break;
             }
             }
+        }
+    }
+    if (up_pressed)
+    {
+        std::cout << "Loop is:" << loop << std::endl;
+        if (loop < 20)
+        {
+            m_player->getComponent<CInput>()->up = true;
+            m_player->getComponent<CState>()->state = "Air";
+            loop++;
+        }
+        else
+        {
+            m_player->getComponent<CInput>()->up = false;
+            m_player->getComponent<CState>()->state = "Stand";
+            up_pressed = false;
+            loop = 0;
         }
     }
 }
